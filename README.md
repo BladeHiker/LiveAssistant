@@ -6,18 +6,20 @@
   </a>
 </p>
 
-> B站直播间弹幕姬，go语言实现，支持短时大量弹幕，礼物和进场处理显示
+> 直播助手，go语言实现，支持短时大量弹幕，礼物和进场处理显示。
+
+**目前只实现了 B站 直播的功能。**
 
 ## Install
 
 ```sh
-git clone https://github.com/sh1luo/BiliDanmu_go.git
+待更新
 ```
 
 ## Usage
 
 ```sh
-go run main.go
+待更新
 ```
 
 ## Feature
