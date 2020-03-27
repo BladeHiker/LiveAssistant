@@ -9,7 +9,7 @@ type ConnectFeedBack struct {
 	qamel.QmlObject
 
 	_ func(int32)  `slot:"receiveRoomID"`
-	_ func(string) `signal:"SendFeedbackMsg"`
+	_ func(string) `signal:"sendFeedbackMsg"`
 
 }
 
@@ -17,13 +17,13 @@ type HandleMsg struct {
 	qamel.QmlObject
 	_ func() `constructor:"init"`
 
-	_ func(string) `signal:"SendDanMu"`
-	_ func(string) `signal:"SendGift"`
-	_ func(string) `signal:"SendWelCome"`
-	_ func(string) `signal:"SendWelComeGuard"`
-	_ func(string) `signal:"SendGreatSailing"`
-	_ func(string) `signal:"SendOnlineChanged"`
-	_ func(string) `signal:"SendFansChanged"`
+	_ func(string) `signal:"sendDanMu"`
+	_ func(string) `signal:"sendGift"`
+	_ func(string) `signal:"sendWelCome"`
+	_ func(string) `signal:"sendWelComeGuard"`
+	_ func(string) `signal:"sendGreatSailing"`
+	_ func(string) `signal:"sendOnlineChanged"`
+	_ func(string) `signal:"sendFansChanged"`
 }
 
 func init() {
@@ -43,7 +43,7 @@ func (h *HandleMsg) HandleMsg() {
 					if err != nil {
 						continue
 					}
-					h.SendDanMu(string(s))
+					h.sendDanMu(string(s))
 				}
 			// 处理用户礼物
 			case b := <-bilibili.P.Gift:
@@ -52,7 +52,7 @@ func (h *HandleMsg) HandleMsg() {
 					if err != nil {
 						continue
 					}
-					h.SendGift(string(s))
+					h.sendGift(string(s))
 				}
 			// 处理贵宾进场，如老爷
 			case c := <-bilibili.P.WelCome:
@@ -61,7 +61,7 @@ func (h *HandleMsg) HandleMsg() {
 				if err != nil {
 					continue
 				}
-				h.SendWelCome(string(s))
+				h.sendWelCome(string(s))
 			// 处理房管进场
 			case d := <-bilibili.P.WelComeGuard:
 				w := GetWelCome(d, 2)
@@ -69,7 +69,7 @@ func (h *HandleMsg) HandleMsg() {
 				if err != nil {
 					continue
 				}
-				h.SendWelComeGuard(string(s))
+				h.sendWelComeGuard(string(s))
 			// 处理舰长等贵宾进场
 			case e := <-bilibili.P.GreatSailing:
 				w := GetWelCome(e, 3)
@@ -77,14 +77,14 @@ func (h *HandleMsg) HandleMsg() {
 				if err != nil {
 					continue
 				}
-				h.SendGreatSailing(string(s))
+				h.sendGreatSailing(string(s))
 			// 处理关注数变动消息
 			case f := <-bilibili.P.Fans:
 				i := json.Get(f,"data","fans").ToInt()
-				h.SendFansChanged(i)
+				h.sendFansChanged(i)
 			// 处理在线人气变动处理
 			case g := <-bilibili.P.Online:
-				h.SendOnlineChanged(g)
+				h.sendOnlineChanged(g)
 			}
 		}
 	}()
@@ -93,20 +93,20 @@ func (h *HandleMsg) HandleMsg() {
 func (m *ConnectFeedBack) receiveRoomID(roomid int32) {
 	key, err := GetAccessKey(roomid)
 	if err != nil {
-		m.SendFeedbackMsg("房间号输入有误")
+		m.sendFeedbackMsg("房间号输入有误")
 		return
 	}
 
 	// 获取客户端实例
 	c, err := bilibili.NewClient(roomid)
 	if err != nil || c == nil {
-		m.SendFeedbackMsg("获取客户端实例失败")
+		m.sendFeedbackMsg("获取客户端实例失败")
 		return
 	}
 
 	// 启动客户端
 	err = c.Start(key)
 	if err != nil {
-		m.SendFeedbackMsg("启动客户端失败")
+		m.sendFeedbackMsg("启动客户端失败")
 	}
 }
