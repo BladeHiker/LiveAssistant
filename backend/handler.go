@@ -8,16 +8,10 @@ import (
 type ConnectFeedBack struct {
 	qamel.QmlObject
 
-	_ func(int32)  `slot:"ReceiveRoomID"`
+	_ func(int32)  `slot:"receiveRoomID"`
 	_ func(string) `signal:"SendFeedbackMsg"`
 
 }
-
-func init() {
-	RegisterQmlConnectFeedBack("ConnectFeedBack", 1, 0, "ConnectFeedBack")
-	RegisterQmlHandleMsg("HandleMsg", 1, 0, "HandleMsg")
-}
-
 
 type HandleMsg struct {
 	qamel.QmlObject
@@ -30,6 +24,11 @@ type HandleMsg struct {
 	_ func(string) `signal:"SendGreatSailing"`
 	_ func(string) `signal:"SendOnlineChanged"`
 	_ func(string) `signal:"SendFansChanged"`
+}
+
+func init() {
+	RegisterQmlConnectFeedBack("ConnectFeedBack", 1, 0, "ConnectFeedBack")
+	RegisterQmlHandleMsg("HandleMsg", 1, 0, "HandleMsg")
 }
 
 // 处理各种需要发送到 QML 的消息
@@ -91,7 +90,7 @@ func (h *HandleMsg) HandleMsg() {
 	}()
 }
 
-func (m *ConnectFeedBack) ReceiveRoomID(roomid int32) {
+func (m *ConnectFeedBack) receiveRoomID(roomid int32) {
 	key, err := GetAccessKey(roomid)
 	if err != nil {
 		m.SendFeedbackMsg("房间号输入有误")
