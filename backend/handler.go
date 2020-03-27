@@ -5,49 +5,93 @@ import (
 	"github.com/go-qamel/qamel"
 )
 
-type Connect struct {
+type ConnectFeedBack struct {
 	qamel.QmlObject
 
-	_ func(int32) `slot:"RecRoomID"`
-
+	_ func(int32)  `slot:"ReceiveRoomID"`
 	_ func(string) `signal:"SendFeedbackMsg"`
 
-	_ func(string) `signal:"SendGift"`
-	_ func(string) `signal:"SendWelCome"`
-	_ func(int32)  `signal:"SendOnlineChanged"`
 }
 
 func init() {
-	RegisterQmlConnect("Connect", 1, 0, "Connect")
-	RegisterQmlDanMu("DanMu", 1, 0, "DanMu")
+	RegisterQmlConnectFeedBack("ConnectFeedBack", 1, 0, "ConnectFeedBack")
+	RegisterQmlHandleMsg("HandleMsg", 1, 0, "HandleMsg")
 }
 
-var p *bilibili.Pool
 
-type DanMu struct {
+type HandleMsg struct {
 	qamel.QmlObject
-	_ func()       `constructor:"init"`
+	_ func() `constructor:"init"`
+
 	_ func(string) `signal:"SendDanMu"`
+	_ func(string) `signal:"SendGift"`
+	_ func(string) `signal:"SendWelCome"`
+	_ func(string) `signal:"SendWelComeGuard"`
+	_ func(string) `signal:"SendGreatSailing"`
+	_ func(string) `signal:"SendOnlineChanged"`
+	_ func(string) `signal:"SendFansChanged"`
 }
 
-func (d *DanMu) init() {
+// 处理各种需要发送到 QML 的消息
+func (h *HandleMsg) HandleMsg() {
 	go func() {
 		for {
-			b := <-p.DanMu
-			if e, err := GetDanMu(b); err != nil {
-				s, err := json.Marshal(e)
+			select {
+			// 处理用户弹幕
+			case a := <-bilibili.P.DanMu:
+				if e, err := GetDanMu(a); err != nil {
+					s, err := json.Marshal(e)
+					if err != nil {
+						continue
+					}
+					h.SendDanMu(string(s))
+				}
+			// 处理用户礼物
+			case b := <-bilibili.P.Gift:
+				if e := GetGift(b); e != nil {
+					s, err := json.Marshal(e)
+					if err != nil {
+						continue
+					}
+					h.SendGift(string(s))
+				}
+			// 处理贵宾进场，如老爷
+			case c := <-bilibili.P.WelCome:
+				w := GetWelCome(c, 1)
+				s, err := json.Marshal(w)
 				if err != nil {
 					continue
 				}
-				d.SendDanMu(string(s))
+				h.SendWelCome(string(s))
+			// 处理房管进场
+			case d := <-bilibili.P.WelComeGuard:
+				w := GetWelCome(d, 2)
+				s, err := json.Marshal(w)
+				if err != nil {
+					continue
+				}
+				h.SendWelComeGuard(string(s))
+			// 处理舰长等贵宾进场
+			case e := <-bilibili.P.GreatSailing:
+				w := GetWelCome(e, 3)
+				s, err := json.Marshal(w)
+				if err != nil {
+					continue
+				}
+				h.SendGreatSailing(string(s))
+			// 处理关注数变动消息
+			case f := <-bilibili.P.Fans:
+				i := json.Get(f,"data","fans").ToInt()
+				h.SendFansChanged(i)
+			// 处理在线人气变动处理
+			case g := <-bilibili.P.Online:
+				h.SendOnlineChanged(g)
 			}
 		}
 	}()
 }
 
-func (m *Connect) RecRoomID(roomid int32) {
-	p = bilibili.NewPool()
-
+func (m *ConnectFeedBack) ReceiveRoomID(roomid int32) {
 	key, err := GetAccessKey(roomid)
 	if err != nil {
 		m.SendFeedbackMsg("房间号输入有误")
@@ -62,7 +106,7 @@ func (m *Connect) RecRoomID(roomid int32) {
 	}
 
 	// 启动客户端
-	err = c.Start()
+	err = c.Start(key)
 	if err != nil {
 		m.SendFeedbackMsg("启动客户端失败")
 	}

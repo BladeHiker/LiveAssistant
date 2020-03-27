@@ -5,8 +5,9 @@ type Pool struct {
 	Gift         chan []byte
 	WelCome      chan []byte
 	WelComeGuard chan []byte
+	GreatSailing chan []byte
 	Online       chan int
-	Fans         chan int
+	Fans         chan []byte
 }
 
 func NewPool() *Pool {
@@ -15,6 +16,7 @@ func NewPool() *Pool {
 		Gift:         make(chan []byte, 10),
 		WelCome:      make(chan []byte, 10),
 		WelComeGuard: make(chan []byte, 10),
+		GreatSailing: make(chan []byte, 10),
 		Online:       make(chan int, 10),
 		Fans:         make(chan int, 10),
 	}

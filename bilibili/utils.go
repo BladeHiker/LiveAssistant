@@ -6,7 +6,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math"
+	"net/http"
 )
 
 // 返回字节数组表示数的十进制形式
@@ -44,4 +46,23 @@ func ZlibInflate(compress []byte) ([]byte, error) {
 		return out.Bytes(), nil
 	}
 	return nil, err
+}
+
+func GetRealRoomID(short int32) (realID int, err error) {
+	url := fmt.Sprintf("%s?id=%d", RealID, short)
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println("http.Get token err: ", err)
+		return 0, err
+	}
+
+	rawdata, err := ioutil.ReadAll(resp.Body)
+	_ = resp.Body.Close()
+	if err != nil {
+		fmt.Println("ioutil.ReadAll(resp.Body) err: ", err)
+		return 0, err
+	}
+	realID = json.Get(rawdata, "data", "room_id").ToInt()
+
+	return realID, nil
 }

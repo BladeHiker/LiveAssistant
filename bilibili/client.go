@@ -14,7 +14,7 @@ import (
 // 客户端实例
 type Client struct {
 	RoomID      int32           // 房间 ID
-	Online      chan int32      // 用来判断人气是否变动
+	Online      int32           // 用来判断人气是否变动
 	Conn        *websocket.Conn // 连接后的对象
 	IsConnected bool
 }
@@ -46,9 +46,10 @@ func NewHandShakeMsg(roomid int32) *HandShakeMsg {
 type CMD string
 
 var (
-	// RealID      = "http://api.live.bilibili.com/room/v1/Room/room_init" // params: id=xxx
+	RealID      = "http://api.live.bilibili.com/room/v1/Room/room_init" // params: id=xxx
 	DanMuServer = "ks-live-dmcmt-bj6-pm-02.chat.bilibili.com:443"
 	json        = jsoniter.ConfigCompatibleWithStandardLibrary
+	P           *Pool
 
 	CMDDanmuMsg                  CMD = "DANMU_MSG"                     // 普通弹幕信息
 	CMDSendGift                  CMD = "SEND_GIFT"                     // 普通的礼物，不包含礼物连击
@@ -61,6 +62,12 @@ var (
 // 获取一个连接好的客户端实例
 func NewClient(roomid int32) (c *Client, err error) {
 	c = new(Client)
+
+	realid ,err:=GetRealRoomID(roomid)
+	if err!=nil {
+		return nil ,err
+	}
+
 	// 连接弹幕服务器并发送握手包
 	u := url.URL{Scheme: "wss", Host: DanMuServer, Path: "sub"}
 	c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
@@ -69,13 +76,14 @@ func NewClient(roomid int32) (c *Client, err error) {
 	}
 
 	c.IsConnected = true
-	c.RoomID = roomid
+	c.RoomID = int32(realid)
 	return
 }
 
 // 发送握手包并开始监听消息
-func (c *Client) Start() (err error) {
+func (c *Client) Start(key string) (err error) {
 	m := NewHandShakeMsg(c.RoomID)
+	m.Key = key
 	b, err := json.Marshal(m)
 	if err != nil {
 		return err
@@ -123,6 +131,8 @@ func (c *Client) SendPackage(packetlen uint32, magic uint16, ver uint16, typeID 
 }
 
 func (c *Client) ReceiveMsg() {
+	P = NewPool()
+
 	for {
 		_, msg, err := c.Conn.ReadMessage()
 		if err != nil {
@@ -134,8 +144,10 @@ func (c *Client) ReceiveMsg() {
 		// 服务器发来的心跳包下行，实体部分仅直播间人气值
 		case 3:
 			h := ByteArrToDecimal(msg[16:])
-			_ = <-c.Online
-			c.Online <- int32(h)
+			if int32(h) != c.Online {
+				c.Online = int32(h)
+				P.Online <- h
+			}
 
 		case 5:
 			inflated, err := ZlibInflate(msg[16:])
@@ -144,13 +156,19 @@ func (c *Client) ReceiveMsg() {
 				for len(inflated) > 0 {
 					l := ByteArrToDecimal(inflated[:4])
 					c := json.Get(inflated[16:l], "cmd").ToString()
-					switch c {
-					case "DANMU_MSG":
-						p.DanmuSrc <- string(inflated[16:l])
-					case "SEND_GIFT":
-						p.GiftSrc <- string(inflated[16:l])
-					case "WELCOME", "WELCOME_GUARD":
-						p.WelCome <- string(inflated[16:l])
+					switch CMD(c) {
+					case CMDDanmuMsg:
+						P.DanMu <- inflated[16:l]
+					case CMDSendGift:
+						P.Gift <- inflated[16:l]
+					case CMDWELCOME:
+						P.WelCome <- inflated[16:l]
+					case CMDWelcomeGuard:
+						P.WelComeGuard <- inflated[16:l]
+					case CMDEntry:
+						P.GreatSailing <- inflated[16:l]
+					case CMDRoomRealTimeMessageUpdate:
+						P.Fans <- inflated[16:l]
 					}
 					inflated = inflated[l:]
 				}
