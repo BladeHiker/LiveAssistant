@@ -18,6 +18,6 @@ func NewPool() *Pool {
 		WelComeGuard: make(chan []byte, 10),
 		GreatSailing: make(chan []byte, 10),
 		Online:       make(chan int, 10),
-		Fans:         make(chan int, 10),
+		Fans:         make(chan []byte, 10),
 	}
 }
