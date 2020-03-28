@@ -22,8 +22,8 @@ type HandleMsg struct {
 	_ func(string) `signal:"sendWelCome"`
 	_ func(string) `signal:"sendWelComeGuard"`
 	_ func(string) `signal:"sendGreatSailing"`
-	_ func(string) `signal:"sendOnlineChanged"`
-	_ func(string) `signal:"sendFansChanged"`
+	_ func(int) `signal:"sendOnlineChanged"`
+	_ func(int) `signal:"sendFansChanged"`
 }
 
 func init() {
@@ -32,7 +32,7 @@ func init() {
 }
 
 // 处理各种需要发送到 QML 的消息
-func (h *HandleMsg) HandleMsg() {
+func (h *HandleMsg) init() {
 	go func() {
 		for {
 			select {
