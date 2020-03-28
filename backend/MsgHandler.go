@@ -13,7 +13,7 @@ func init() {
 type ConnectFeedBack struct {
 	qamel.QmlObject
 
-	_ func(int)  `slot:"receiveRoomID"`
+	_ func(int)    `slot:"receiveRoomID"`
 	_ func(string) `signal:"sendFeedbackMsg"`
 }
 
@@ -47,8 +47,8 @@ type HandleMsg struct {
 	_ func(string) `signal:"sendWelCome"`
 	_ func(string) `signal:"sendWelComeGuard"`
 	_ func(string) `signal:"sendGreatSailing"`
-	_ func(int) `signal:"sendOnlineChanged"`
-	_ func(int) `signal:"sendFansChanged"`
+	_ func(int)    `signal:"sendOnlineChanged"`
+	_ func(int)    `signal:"sendFansChanged"`
 }
 
 // 处理各种需要发送到 QML 的消息
@@ -100,7 +100,7 @@ func (h *HandleMsg) init() {
 				h.sendGreatSailing(string(s))
 			// 处理关注数变动消息
 			case f := <-bilibili.P.Fans:
-				i := json.Get(f,"data","fans").ToInt()
+				i := json.Get(f, "data", "fans").ToInt()
 				h.sendFansChanged(i)
 			// 处理在线人气变动处理
 			case g := <-bilibili.P.Online:
