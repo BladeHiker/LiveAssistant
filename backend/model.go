@@ -77,18 +77,18 @@ func GetUserAvatar(userid int32) (ava string, err error) {
 }
 
 // GetDanMu 提取一条弹幕
-func GetDanMu(src []byte) (*UserDanMu, error) {
+func GetDanMu(src []byte) (*UserDanMu) {
 	d := new(UserDanMu)
 	u := json.Get(src, "info", 2, 0).ToInt32()
 	a, err := GetUserAvatar(u)
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	d.Avatar = a
 	d.Uname = json.Get(src, "info", 2, 1).ToString()
 	d.Text = json.Get(src, "info", 1).ToString()
 
-	return d, nil
+	return d
 }
 
 // GetGift 获取一条礼物信息
@@ -112,7 +112,12 @@ func GetWelCome(src []byte,typeID uint8) *WelCome {
 	switch typeID {
 	case 1:
 		w.Uname = json.Get(src, "data", "uname").ToString()
-		w.Title = "老爷"
+		level := json.Get(src, "data", "svip").ToInt()
+		if level == 1 {
+			w.Title = "年费老爷"
+		} else {
+			w.Title = "老爷"
+		}
 	case 2:
 		w.Uname = json.Get(src, "data", "username").ToString()
 		w.Title = "房管"
@@ -128,4 +133,6 @@ func GetWelCome(src []byte,typeID uint8) *WelCome {
 	}
 	return w
 }
+
+
 

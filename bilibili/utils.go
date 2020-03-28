@@ -40,7 +40,6 @@ func ZlibInflate(compress []byte) ([]byte, error) {
 	if err != zlib.ErrChecksum && err != zlib.ErrDictionary && err != zlib.ErrHeader && r != nil {
 		_, _ = io.Copy(&out, r)
 		if err := r.Close(); err != nil {
-			fmt.Println("r.close err:", err)
 			return nil, err
 		}
 		return out.Bytes(), nil
@@ -49,8 +48,8 @@ func ZlibInflate(compress []byte) ([]byte, error) {
 }
 
 func GetRealRoomID(short int32) (realID int, err error) {
-	url := fmt.Sprintf("%s?id=%d", RealID, short)
-	resp, err := http.Get(url)
+	u := fmt.Sprintf("%s?id=%d", RealID, short)
+	resp, err := http.Get(u)
 	if err != nil {
 		fmt.Println("http.Get token err: ", err)
 		return 0, err

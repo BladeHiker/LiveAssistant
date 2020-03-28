@@ -3,10 +3,8 @@ package bilibili
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"github.com/gorilla/websocket"
 	jsoniter "github.com/json-iterator/go"
-	"log"
 	"net/url"
 	"time"
 )
@@ -22,7 +20,7 @@ type Client struct {
 // HandShakeMsg 定义了握手包的信息格式
 type HandShakeMsg struct {
 	Uid       int32  `json:"uid"`
-	RoomID    int32  `json:"room_id"`
+	RoomID    int32  `json:"roomid"`
 	Protover  int32  `json:"protover"`
 	Platform  string `json:"platform"`
 	Clientver string `json:"clientver"`
@@ -63,9 +61,9 @@ var (
 func NewClient(roomid int32) (c *Client, err error) {
 	c = new(Client)
 
-	realid ,err:=GetRealRoomID(roomid)
-	if err!=nil {
-		return nil ,err
+	realid, err := GetRealRoomID(roomid)
+	if err != nil {
+		return nil, err
 	}
 
 	// 连接弹幕服务器并发送握手包
@@ -112,7 +110,6 @@ func (c *Client) SendPackage(packetlen uint32, magic uint16, ver uint16, typeID 
 	// 将包的头部信息以大端序方式写入字节数组
 	for _, v := range pdata {
 		if err = binary.Write(packetHead, binary.BigEndian, v); err != nil {
-			fmt.Println("binary.Write err: ", err)
 			return
 		}
 	}
@@ -120,10 +117,7 @@ func (c *Client) SendPackage(packetlen uint32, magic uint16, ver uint16, typeID 
 	// 将包内数据部分追加到数据包内
 	sendData := append(packetHead.Bytes(), data...)
 
-	// fmt.Println("本次发包消息为：", sendData)
-
 	if err = c.Conn.WriteMessage(websocket.BinaryMessage, sendData); err != nil {
-		fmt.Println("c.conn.Write err: ", err)
 		return
 	}
 
@@ -182,7 +176,6 @@ func (c *Client) HeartBeat() {
 		if c.IsConnected {
 			obj := []byte("5b6f626a656374204f626a6563745d")
 			if err := c.SendPackage(0, 16, 1, 2, 1, obj); err != nil {
-				log.Println("heart beat err: ", err)
 				continue
 			}
 			time.Sleep(30 * time.Second)
