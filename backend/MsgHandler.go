@@ -5,12 +5,37 @@ import (
 	"github.com/go-qamel/qamel"
 )
 
+func init() {
+	RegisterQmlConnectFeedBack("ConnectFeedBack", 1, 0, "ConnectFeedBack")
+	RegisterQmlHandleMsg("HandleMsg", 1, 0, "HandleMsg")
+}
+
 type ConnectFeedBack struct {
 	qamel.QmlObject
 
-	_ func(int32)  `slot:"receiveRoomID"`
+	_ func(int)  `slot:"receiveRoomID"`
 	_ func(string) `signal:"sendFeedbackMsg"`
+}
 
+func (m *ConnectFeedBack) receiveRoomID(roomid int) {
+	key, err := GetAccessKey(int32(roomid))
+	if err != nil {
+		m.sendFeedbackMsg("房间号输入有误")
+		return
+	}
+
+	// 获取客户端实例
+	c, err := bilibili.NewClient(int32(roomid))
+	if err != nil || c == nil {
+		m.sendFeedbackMsg("获取客户端实例失败")
+		return
+	}
+
+	// 启动客户端
+	err = c.Start(key)
+	if err != nil {
+		m.sendFeedbackMsg("启动客户端失败")
+	}
 }
 
 type HandleMsg struct {
@@ -24,11 +49,6 @@ type HandleMsg struct {
 	_ func(string) `signal:"sendGreatSailing"`
 	_ func(int) `signal:"sendOnlineChanged"`
 	_ func(int) `signal:"sendFansChanged"`
-}
-
-func init() {
-	RegisterQmlConnectFeedBack("ConnectFeedBack", 1, 0, "ConnectFeedBack")
-	RegisterQmlHandleMsg("HandleMsg", 1, 0, "HandleMsg")
 }
 
 // 处理各种需要发送到 QML 的消息
@@ -88,25 +108,4 @@ func (h *HandleMsg) init() {
 			}
 		}
 	}()
-}
-
-func (m *ConnectFeedBack) receiveRoomID(roomid int32) {
-	key, err := GetAccessKey(roomid)
-	if err != nil {
-		m.sendFeedbackMsg("房间号输入有误")
-		return
-	}
-
-	// 获取客户端实例
-	c, err := bilibili.NewClient(roomid)
-	if err != nil || c == nil {
-		m.sendFeedbackMsg("获取客户端实例失败")
-		return
-	}
-
-	// 启动客户端
-	err = c.Start(key)
-	if err != nil {
-		m.sendFeedbackMsg("启动客户端失败")
-	}
 }
