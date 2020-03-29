@@ -26,8 +26,8 @@ type UserGift struct {
 }
 
 type WelCome struct {
-	Uname  string `json:"uname"`
-	Title  string `json:"title"`
+	Uname string `json:"uname"`
+	Title string `json:"title"`
 }
 
 var
@@ -52,7 +52,7 @@ func GetAccessKey(roomid int32) (key string, err error) {
 	if err != nil {
 		return
 	}
-	key = json.Get(rawdata, "data","token").ToString()
+	key = json.Get(rawdata, "data", "token").ToString()
 	return
 }
 
@@ -107,7 +107,7 @@ func GetGift(src []byte) *UserGift {
 }
 
 // 1是老爷，2是房管，3是舰长/提督等
-func GetWelCome(src []byte,typeID uint8) *WelCome {
+func GetWelCome(src []byte, typeID uint8) *WelCome {
 	w := new(WelCome)
 	switch typeID {
 	case 1:
@@ -126,13 +126,10 @@ func GetWelCome(src []byte,typeID uint8) *WelCome {
 		b := []byte(s)
 		// 拿到的字符串形如“欢迎舰长 xxx 进入直播间”
 		w.Uname = string(b[6:12])
-		w.Title = string(b[14:len(b)-16])
+		w.Title = string(b[14 : len(b)-16])
 	}
-	if w.Uname =="" || w.Title == "" {
+	if w.Uname == "" || w.Title == "" {
 		return nil
 	}
 	return w
 }
-
-
-
