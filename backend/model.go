@@ -52,7 +52,7 @@ func GetAccessKey(roomid int32) (key string, err error) {
 	if err != nil {
 		return
 	}
-	key = json.Get(rawdata, "data").Get("token").ToString()
+	key = json.Get(rawdata, "data","token").ToString()
 	return
 }
 
@@ -77,7 +77,7 @@ func GetUserAvatar(userid int32) (ava string, err error) {
 }
 
 // GetDanMu 提取一条弹幕
-func GetDanMu(src []byte) (*UserDanMu) {
+func GetDanMu(src []byte) *UserDanMu {
 	d := new(UserDanMu)
 	u := json.Get(src, "info", 2, 0).ToInt32()
 	a, err := GetUserAvatar(u)

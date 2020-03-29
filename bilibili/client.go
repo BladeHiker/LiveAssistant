@@ -146,7 +146,7 @@ func (c *Client) ReceiveMsg() {
 		case 5:
 			inflated, err := ZlibInflate(msg[16:])
 			if err == nil {
-				// 代表数据需要压缩，如DANMU_MSG，SEND_GIFT等信息量较少的数据包
+				// 代表数据需要压缩，如DANMU_MSG，SEND_GIFT等信息量较大的数据包
 				for len(inflated) > 0 {
 					l := ByteArrToDecimal(inflated[:4])
 					c := json.Get(inflated[16:l], "cmd").ToString()

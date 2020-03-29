@@ -62,6 +62,5 @@ func GetRealRoomID(short int32) (realID int, err error) {
 		return 0, err
 	}
 	realID = json.Get(rawdata, "data", "room_id").ToInt()
-
 	return realID, nil
 }

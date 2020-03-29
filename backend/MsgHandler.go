@@ -57,7 +57,7 @@ func (h *HandleMsg) init() {
 			select {
 			// 处理用户弹幕
 			case a := <-bilibili.P.DanMu:
-				if e := GetDanMu(a); e == nil {
+				if e := GetDanMu(a); e != nil {
 					s, err := json.Marshal(e)
 					if err != nil {
 						continue

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var roomid int32 = 757349
+var roomid int32 = 21773215
 func TestGetAccessKey(t *testing.T) {
 	key, err := GetAccessKey(roomid)
 	if err != nil || key == "" {
