@@ -137,7 +137,7 @@ func handle() {
 			select {
 			// 处理用户弹幕
 			case a := <-P.DanMu:
-				fmt.Println("这是一条弹幕，正在提取出信息 准备处理。。。",a)
+				fmt.Println("这是一条弹幕，正在提取出信息 准备处理。。。")
 				if e := GetDanMu(a); e != nil {
 					s, err := json.Marshal(e)
 					if err != nil {

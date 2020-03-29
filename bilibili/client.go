@@ -125,7 +125,6 @@ func (c *Client) SendPackage(packetlen uint32, magic uint16, ver uint16, typeID 
 }
 
 func (c *Client) ReceiveMsg() {
-	P = NewPool()
 
 	for {
 		_, msg, err := c.Conn.ReadMessage()

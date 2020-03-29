@@ -2,6 +2,7 @@ package backend
 
 import (
 	"LiveAssistant/bilibili"
+	_ "LiveAssistant/bilibili"
 	"github.com/go-qamel/qamel"
 )
 
