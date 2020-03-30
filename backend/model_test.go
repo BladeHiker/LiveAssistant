@@ -5,9 +5,8 @@ import (
 	"testing"
 )
 
-var roomid int32 = 21773215
-
 func TestGetAccessKey(t *testing.T) {
+	var roomid int32 = 21773215
 	key, err := GetAccessKey(roomid)
 	if err != nil || key == "" {
 		t.Error("`GetAccessKey(757349)` key error")
@@ -15,16 +14,17 @@ func TestGetAccessKey(t *testing.T) {
 	fmt.Println(key)
 }
 
-var userid int32 = 265975162
-
 func TestGetUserAvatar(t *testing.T) {
+	var userid int32 = 265975162
 	key, err := GetUserAvatar(userid)
 	if err != nil || key == "" {
 		t.Error("`GetUserAvatar(265975162)` key error")
 	}
 }
 
-var DanMu = `
+func TestGetDanMu(t *testing.T) {
+
+	var DanMu = `
 {
 	"cmd": "DANMU_MSG",
 	"info": [
@@ -38,15 +38,14 @@ var DanMu = `
 		0, 0, null, null, 0
 	]
 }`
-
-func TestGetDanMu(t *testing.T) {
 	d := GetDanMu([]byte(DanMu))
 	if d == nil {
 		t.Error("GetDanMu([]byte(DanMu)) err")
 	}
 }
 
-var Gift = `
+func TestGetGift(t *testing.T) {
+	var Gift = `
 {
 	"cmd": "SEND_GIFT",
 	"data": {
@@ -102,8 +101,6 @@ var Gift = `
 	}
 }
 `
-
-func TestGetGift(t *testing.T) {
 	g := GetGift([]byte(Gift))
 	if g == nil {
 		t.Error("GetGift([]byte(Gift)) err")
