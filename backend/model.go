@@ -9,10 +9,22 @@ import (
 	"github.com/json-iterator/go"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+)
+
+var
+(
+	json        = jsoniter.ConfigCompatibleWithStandardLibrary
+	keyUrl      = "https://api.live.bilibili.com/room/v1/Danmu/getConf" // params: room_id=xxx&platform=pc&player=web
+	userInfoUrl = "https://api.bilibili.com/x/space/acc/info"           //mid=382297465&jsonp=jsonp
+	server      = "shiluo.design:3000"
+	MusicInfo   chan string
 )
 
 type UserDanMu struct {
 	Avatar string `json:"avatar"`
+	// 老爷0，房管1，舰长2，提督3，总督4，普通5
+	Utitle int`json:"utitle"`
 	Uname  string `json:"uname"`
 	Text   string `json:"text"`
 }
@@ -29,13 +41,6 @@ type WelCome struct {
 	Uname string `json:"uname"`
 	Title string `json:"title"`
 }
-
-var
-(
-	json        = jsoniter.ConfigCompatibleWithStandardLibrary
-	keyUrl      = "https://api.live.bilibili.com/room/v1/Danmu/getConf" // params: room_id=xxx&platform=pc&player=web
-	userInfoUrl = "https://api.bilibili.com/x/space/acc/info"           //mid=382297465&jsonp=jsonp
-)
 
 // 获取发送握手包必须的 key
 func GetAccessKey(roomid int32) (key string, err error) {
@@ -107,8 +112,9 @@ func GetGift(src []byte) *UserGift {
 }
 
 // 1是老爷，2是房管，3是舰长/提督等
-func GetWelCome(src []byte, typeID uint8) *WelCome {
+func GetWelCome(src []byte, typeID uint8) (*WelCome, string) {
 	w := new(WelCome)
+	var s string
 	switch typeID {
 	case 1:
 		w.Uname = json.Get(src, "data", "uname").ToString()
@@ -122,14 +128,59 @@ func GetWelCome(src []byte, typeID uint8) *WelCome {
 		w.Uname = json.Get(src, "data", "username").ToString()
 		w.Title = "房管"
 	case 3:
-		s := json.Get(src, "data", "copy_writing").ToString()
-		b := []byte(s)
-		// 拿到的字符串形如“欢迎舰长 xxx 进入直播间”
-		w.Uname = string(b[6:12])
-		w.Title = string(b[14 : len(b)-16])
+		s = json.Get(src, "data", "copy_writing").ToString()
+		return nil,s
 	}
 	if w.Uname == "" || w.Title == "" {
-		return nil
+		return nil, ""
+	} else {
+		return w,""
 	}
-	return w
+}
+
+// 根据歌手名和歌曲获取音乐URI地址
+func GetMusicURI(singer, mname string) (URI string, err error) {
+	// 根据歌手名，音乐名获取歌曲id
+	q := url.Values{}
+	q.Set("keywords", singer+" "+mname)
+	q.Set("limit", "1")
+	u := url.URL{
+		Scheme:   "http",
+		Host:     server,
+		Path:     "search",
+		RawQuery: q.Encode(),
+	}
+	resp, err := http.Get(u.String())
+	if err != nil {
+		return
+	}
+
+	rawdata, err := ioutil.ReadAll(resp.Body)
+	_ = resp.Body.Close()
+	if err != nil {
+		return
+	}
+	id := json.Get(rawdata, "result", "songs", 0, "id").ToInt()
+
+	fmt.Println("歌曲id是", id)
+
+	// 根据id获取歌曲uri
+	r := fmt.Sprintf("http://%s/song/url?id=%d", server, id)
+	res, err := http.Get(r)
+	if err != nil {
+		return
+	}
+
+	data, err := ioutil.ReadAll(res.Body)
+
+	_ = resp.Body.Close()
+	if err != nil {
+		return
+	}
+
+	URI = json.Get(data, "data", 0, "url").ToString()
+
+	fmt.Println("URI是", URI)
+
+	return
 }

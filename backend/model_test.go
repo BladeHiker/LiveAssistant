@@ -6,6 +6,7 @@ import (
 )
 
 var roomid int32 = 21773215
+
 func TestGetAccessKey(t *testing.T) {
 	key, err := GetAccessKey(roomid)
 	if err != nil || key == "" {
@@ -15,6 +16,7 @@ func TestGetAccessKey(t *testing.T) {
 }
 
 var userid int32 = 265975162
+
 func TestGetUserAvatar(t *testing.T) {
 	key, err := GetUserAvatar(userid)
 	if err != nil || key == "" {
@@ -36,6 +38,7 @@ var DanMu = `
 		0, 0, null, null, 0
 	]
 }`
+
 func TestGetDanMu(t *testing.T) {
 	d := GetDanMu([]byte(DanMu))
 	if d == nil {
@@ -99,9 +102,18 @@ var Gift = `
 	}
 }
 `
+
 func TestGetGift(t *testing.T) {
 	g := GetGift([]byte(Gift))
-	if  g == nil {
+	if g == nil {
 		t.Error("GetGift([]byte(Gift)) err")
+	}
+}
+
+func TestGetMusicURI(t *testing.T) {
+	singer, mname := "beyond", "海阔天空"
+	_, err := GetMusicURI(singer, mname)
+	if err != nil {
+		t.Error("GetMusicURI(singer,mname) err:",err)
 	}
 }
