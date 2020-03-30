@@ -18,6 +18,7 @@ type ConnectFeedBack struct {
 	qamel.QmlObject
 
 	_ func(int) int `slot:"receiveRoomID"`
+	_ func(int) `signal:"sendFansNums"`
 }
 
 func (m *ConnectFeedBack) receiveRoomID(roomid int) int {
@@ -37,6 +38,8 @@ func (m *ConnectFeedBack) receiveRoomID(roomid int) int {
 	if err != nil {
 		return -1
 	}
+
+	m.sendFansNums(GetFansByAPI(roomid))
 
 	return 0
 }

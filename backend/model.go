@@ -18,6 +18,7 @@ var
 	keyUrl      = "https://api.live.bilibili.com/room/v1/Danmu/getConf" // params: room_id=xxx&platform=pc&player=web
 	userInfoUrl = "https://api.bilibili.com/x/space/acc/info"           //mid=382297465&jsonp=jsonp
 	server      = "shiluo.design:3000"
+	RoomInfoURI = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom" // params:?room_id=923833
 	MusicInfo   chan string
 )
 
@@ -44,9 +45,9 @@ type WelCome struct {
 
 // 获取发送握手包必须的 key
 func GetAccessKey(roomid int32) (key string, err error) {
-	url := fmt.Sprintf("%s?room_id=%d&platform=pc&player=web", keyUrl, roomid)
+	u := fmt.Sprintf("%s?room_id=%d&platform=pc&player=web", keyUrl, roomid)
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(u)
 	if err != nil {
 		return
 	}
@@ -183,4 +184,23 @@ func GetMusicURI(singer, mname string) (URI string, err error) {
 	fmt.Println("URI是", URI)
 
 	return
+}
+
+func GetFansByAPI(roomid int) int {
+	u := fmt.Sprintf("%s?room_id=%d", RoomInfoURI, roomid)
+
+	resp, err := http.Get(u)
+	if err != nil {
+		return 0
+	}
+
+	rawdata, err := ioutil.ReadAll(resp.Body)
+
+	_ = resp.Body.Close()
+	if err != nil {
+		return 0
+	}
+
+	fans := json.Get(rawdata, "data", "anchor_info","relation_info","attention").ToInt()
+	return fans
 }

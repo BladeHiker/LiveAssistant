@@ -114,6 +114,13 @@ func TestGetMusicURI(t *testing.T) {
 	singer, mname := "beyond", "海阔天空"
 	_, err := GetMusicURI(singer, mname)
 	if err != nil {
-		t.Error("GetMusicURI(singer,mname) err:",err)
+		t.Error("GetMusicURI(singer,mname) err:", err)
+	}
+}
+
+func TestGetFansByAPI(t *testing.T) {
+	roomid := 923833
+	if f := GetFansByAPI(roomid); f == 0 {
+		t.Error("GetFansByAPI(roomid) err:fans=", f)
 	}
 }
