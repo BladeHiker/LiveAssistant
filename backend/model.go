@@ -24,10 +24,16 @@ var
 
 type UserDanMu struct {
 	Avatar string `json:"avatar"`
-	// 老爷0，房管1，舰长2，提督3，总督4，普通5
-	Utitle int`json:"utitle"`
-	Uname  string `json:"uname"`
-	Text   string `json:"text"`
+	// 老爷1，房管2，舰长/提督/总督4,普通8
+	Utitle int `json:"utitle"`
+	// 用户等级
+	UserLevel int `json:"user_level"`
+	// 用户牌子
+	MedalName string `json:"medal_name"`
+	// 牌子等级
+	MedalLevel int    `json:"medal_level"`
+	Uname      string `json:"uname"`
+	Text       string `json:"text"`
 }
 
 type UserGift struct {
@@ -93,6 +99,14 @@ func GetDanMu(src []byte) *UserDanMu {
 	d.Avatar = a
 	d.Uname = json.Get(src, "info", 2, 1).ToString()
 	d.Text = json.Get(src, "info", 1).ToString()
+	d.MedalName = json.Get(src, "info",3 ,1).ToString()
+	d.MedalLevel = json.Get(src, "info",3 ,0).ToInt()
+	d.UserLevel = json.Get(src, "info",4 ,0).ToInt()
+
+	// 判定用户称呼，比如 房管 | 老爷 | 舰长等等，用二进制位按位与表示
+	guard := json.Get(src, "info", 2, 2).ToInt()
+	vip := json.Get(src, "info", 2, 3).ToInt()
+	d.Utitle = guard | vip
 
 	return d
 }
@@ -130,12 +144,12 @@ func GetWelCome(src []byte, typeID uint8) (*WelCome, string) {
 		w.Title = "房管"
 	case 3:
 		s = json.Get(src, "data", "copy_writing").ToString()
-		return nil,s
+		return nil, s
 	}
 	if w.Uname == "" || w.Title == "" {
 		return nil, ""
 	} else {
-		return w,""
+		return w, ""
 	}
 }
 
@@ -186,6 +200,7 @@ func GetMusicURI(singer, mname string) (URI string, err error) {
 	return
 }
 
+// 根据官方的api获取关注数
 func GetFansByAPI(roomid int) int {
 	u := fmt.Sprintf("%s?room_id=%d", RoomInfoURI, roomid)
 
@@ -201,6 +216,6 @@ func GetFansByAPI(roomid int) int {
 		return 0
 	}
 
-	fans := json.Get(rawdata, "data", "anchor_info","relation_info","attention").ToInt()
+	fans := json.Get(rawdata, "data", "anchor_info", "relation_info", "attention").ToInt()
 	return fans
 }
