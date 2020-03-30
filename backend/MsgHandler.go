@@ -4,7 +4,11 @@ import (
 	"LiveAssistant/bilibili"
 	_ "LiveAssistant/bilibili"
 	"github.com/go-qamel/qamel"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 	"strings"
+	"time"
 )
 
 func init() {
@@ -17,8 +21,25 @@ func init() {
 type ConnectFeedBack struct {
 	qamel.QmlObject
 
+	_ func()        `constructor:"init"`
 	_ func(int) int `slot:"receiveRoomID"`
 	_ func(int)     `signal:"sendFansNums"`
+
+	_ func(int, float64, float64, float64) `signal:"sendLocalInfo"`
+}
+
+func (m *ConnectFeedBack) init() {
+	go func() {
+		for {
+			vm,VMErr:=mem.VirtualMemory()
+			f,CErr:=cpu.Percent(time.Second,false)
+			net.IOCounters(true)
+
+			if err != nil {
+
+			}
+		}
+	}()
 }
 
 func (m *ConnectFeedBack) receiveRoomID(roomid int) int {

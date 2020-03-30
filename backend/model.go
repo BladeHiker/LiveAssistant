@@ -49,6 +49,16 @@ type WelCome struct {
 	Title string `json:"title"`
 }
 
+type LocalInfo struct {
+	Mem int `json:"mem"`
+	Cpu float64 `json:"cpu"`
+	Send float64 `json:"send"`
+	Recv float64 `json:"recv"`
+	DiskUsed []float64 `json:"disk_used"`
+	DiskRead []int64 `json:"disk_read"`
+	DiskWrite []int64 `json:"disk_write"`
+}
+
 // 获取发送握手包必须的 key
 func GetAccessKey(roomid int32) (key string, err error) {
 	u := fmt.Sprintf("%s?room_id=%d&platform=pc&player=web", keyUrl, roomid)
