@@ -18,7 +18,7 @@ type ConnectFeedBack struct {
 	qamel.QmlObject
 
 	_ func(int) int `slot:"receiveRoomID"`
-	_ func(int) `signal:"sendFansNums"`
+	_ func(int)     `signal:"sendFansNums"`
 }
 
 func (m *ConnectFeedBack) receiveRoomID(roomid int) int {
