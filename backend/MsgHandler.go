@@ -4,11 +4,7 @@ import (
 	"LiveAssistant/bilibili"
 	_ "LiveAssistant/bilibili"
 	"github.com/go-qamel/qamel"
-	"github.com/shirou/gopsutil/cpu"
-	"github.com/shirou/gopsutil/mem"
-	"github.com/shirou/gopsutil/net"
 	"strings"
-	"time"
 )
 
 func init() {
@@ -24,20 +20,18 @@ type ConnectFeedBack struct {
 	_ func()        `constructor:"init"`
 	_ func(int) int `slot:"receiveRoomID"`
 	_ func(int)     `signal:"sendFansNums"`
-
-	_ func(int, float64, float64, float64) `signal:"sendLocalInfo"`
+	_ func(string)  `signal:"sendCompInfo"`
 }
 
 func (m *ConnectFeedBack) init() {
 	go func() {
 		for {
-			vm,VMErr:=mem.VirtualMemory()
-			f,CErr:=cpu.Percent(time.Second,false)
-			net.IOCounters(true)
-
+			i := GetCompInfo()
+			b, err := json.Marshal(i)
 			if err != nil {
-
+				continue
 			}
+			m.sendCompInfo(string(b))
 		}
 	}()
 }

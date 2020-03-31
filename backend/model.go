@@ -7,9 +7,13 @@ package backend
 import (
 	"fmt"
 	"github.com/json-iterator/go"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 var
@@ -22,9 +26,17 @@ var
 	MusicInfo   chan string
 )
 
+const (
+	// TODO 舰长身份的识别
+	CommonUser = 1      	// 普通用户
+	Vip        = 1 << 1 	// 老爷
+	Guard      = 1 << 2 	// 房管
+	Sailing    = 1 << 3 	// 大航海
+)
+
 type UserDanMu struct {
 	Avatar string `json:"avatar"`
-	// 老爷1，年费老爷2，房管4，舰长/提督/总督8,普通16
+	// 用户头衔
 	Utitle int `json:"utitle"`
 	// 用户等级
 	UserLevel int `json:"user_level"`
@@ -42,7 +54,7 @@ type UserGift struct {
 	Action string `json:"action"`
 	Gname  string `json:"gname"`
 	Nums   int32  `json:"nums"`
-	Price int `json:"price"`
+	Price  int    `json:"price"`
 }
 
 type WelCome struct {
@@ -51,13 +63,13 @@ type WelCome struct {
 }
 
 type LocalInfo struct {
-	Mem       int       `json:"mem"`        // 内存使用率
-	Cpu       float64   `json:"cpu"`        // CPU使用率
-	Send      float64   `json:"send"`       // 单位时间发送字节数
-	Recv      float64   `json:"recv"`       // 单位时间接收字节数
-	DiskUsed  []float64 `json:"disk_used"`  // 磁盘使用率
-	DiskRead  []int64   `json:"disk_read"`  // 磁盘读取字节数
-	DiskWrite []int64   `json:"disk_write"` // 磁盘写入字节数
+	MemUsedPercent float64   `json:"mem"`        // 内存使用率
+	CpuUsedPercent float64   `json:"cpu"`        // CPU使用率
+	SendBytes      int64     `json:"send"`       // 单位时间发送字节数
+	RecvBytes      int64     `json:"recv"`       // 单位时间接收字节数
+	DiskUsed       []float64 `json:"disk_used"`  // 磁盘使用率
+	DiskRead       []int64   `json:"disk_read"`  // 磁盘读取字节数
+	DiskWrite      []int64   `json:"disk_write"` // 磁盘写入字节数
 }
 
 // 获取发送握手包必须的 key
@@ -81,9 +93,9 @@ func GetAccessKey(roomid int32) (key string, err error) {
 
 // GetUserAvatar 获取用户头像
 func GetUserAvatar(userid int32) (ava string, err error) {
-	url := fmt.Sprintf("%s?mid=%d&jsonp=jsonp", userInfoUrl, userid)
+	u := fmt.Sprintf("%s?mid=%d&jsonp=jsonp", userInfoUrl, userid)
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(u)
 	if err != nil {
 		return
 	}
@@ -115,10 +127,10 @@ func GetDanMu(src []byte) *UserDanMu {
 	d.UserLevel = json.Get(src, "info", 4, 0).ToInt()
 
 	// 判定用户称呼，比如 房管 | 老爷 | 舰长等等，用二进制位按位与表示
-	// TODO 舰长身份的识别
+
 	guard := json.Get(src, "info", 2, 2).ToInt()
 	vip := json.Get(src, "info", 2, 3).ToInt()
-	d.Utitle = guard | vip
+	d.Utitle = guard | vip | CommonUser
 
 	return d
 }
@@ -231,4 +243,24 @@ func GetFansByAPI(roomid int) int {
 
 	fans := json.Get(rawdata, "data", "anchor_info", "relation_info", "attention").ToInt()
 	return fans
+}
+
+func GetCompInfo() (l *LocalInfo) {
+	l = new(LocalInfo)
+	vm, _ := mem.VirtualMemory()
+	f, _ := cpu.Percent(time.Second, false)
+	io, _ := net.IOCounters(true)
+	for _, v := range io {
+		// qamel 不支持uint64类型，转换一下
+		l.SendBytes += int64(v.BytesSent)
+		l.RecvBytes += int64(v.BytesRecv)
+	}
+
+	// 不判错，若获取失败返回零值
+	l.MemUsedPercent = vm.UsedPercent
+	l.CpuUsedPercent = f[0]
+
+	//TODO 磁盘使用率，读写量暂定
+
+	return
 }
