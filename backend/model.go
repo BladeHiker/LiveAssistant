@@ -24,7 +24,7 @@ var
 
 type UserDanMu struct {
 	Avatar string `json:"avatar"`
-	// 老爷1，房管2，舰长/提督/总督4,普通8
+	// 老爷1，年费老爷2，房管4，舰长/提督/总督8,普通16
 	Utitle int `json:"utitle"`
 	// 用户等级
 	UserLevel int `json:"user_level"`
@@ -42,6 +42,7 @@ type UserGift struct {
 	Action string `json:"action"`
 	Gname  string `json:"gname"`
 	Nums   int32  `json:"nums"`
+	Price int `json:"price"`
 }
 
 type WelCome struct {
@@ -50,13 +51,13 @@ type WelCome struct {
 }
 
 type LocalInfo struct {
-	Mem int `json:"mem"`
-	Cpu float64 `json:"cpu"`
-	Send float64 `json:"send"`
-	Recv float64 `json:"recv"`
-	DiskUsed []float64 `json:"disk_used"`
-	DiskRead []int64 `json:"disk_read"`
-	DiskWrite []int64 `json:"disk_write"`
+	Mem       int       `json:"mem"`        // 内存使用率
+	Cpu       float64   `json:"cpu"`        // CPU使用率
+	Send      float64   `json:"send"`       // 单位时间发送字节数
+	Recv      float64   `json:"recv"`       // 单位时间接收字节数
+	DiskUsed  []float64 `json:"disk_used"`  // 磁盘使用率
+	DiskRead  []int64   `json:"disk_read"`  // 磁盘读取字节数
+	DiskWrite []int64   `json:"disk_write"` // 磁盘写入字节数
 }
 
 // 获取发送握手包必须的 key
@@ -109,11 +110,12 @@ func GetDanMu(src []byte) *UserDanMu {
 	d.Avatar = a
 	d.Uname = json.Get(src, "info", 2, 1).ToString()
 	d.Text = json.Get(src, "info", 1).ToString()
-	d.MedalName = json.Get(src, "info",3 ,1).ToString()
-	d.MedalLevel = json.Get(src, "info",3 ,0).ToInt()
-	d.UserLevel = json.Get(src, "info",4 ,0).ToInt()
+	d.MedalName = json.Get(src, "info", 3, 1).ToString()
+	d.MedalLevel = json.Get(src, "info", 3, 0).ToInt()
+	d.UserLevel = json.Get(src, "info", 4, 0).ToInt()
 
 	// 判定用户称呼，比如 房管 | 老爷 | 舰长等等，用二进制位按位与表示
+	// TODO 舰长身份的识别
 	guard := json.Get(src, "info", 2, 2).ToInt()
 	vip := json.Get(src, "info", 2, 3).ToInt()
 	d.Utitle = guard | vip
@@ -129,8 +131,9 @@ func GetGift(src []byte) *UserGift {
 	g.Action = json.Get(src, "data", "action").ToString()
 	g.Gname = json.Get(src, "data", "giftName").ToString()
 	g.Nums = json.Get(src, "data", "num").ToInt32()
+	g.Price = json.Get(src, "data", "price").ToInt()
 
-	if g.Nums == 0 || g.Gname == "" || g.Action == "" || g.Avatar == "" || g.Uname == "" {
+	if g.Price == 0 {
 		return nil
 	}
 	return g
