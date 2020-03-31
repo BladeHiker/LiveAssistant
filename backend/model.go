@@ -259,6 +259,8 @@ func GetCompInfo() (l *LocalInfo) {
 	// 不判错，若获取失败返回零值
 	l.MemUsedPercent = vm.UsedPercent
 	l.CpuUsedPercent = f[0]
+	l.RecvBytes = l.RecvBytes / 8 / 1024
+	l.SendBytes = l.SendBytes / 8 / 1024
 
 	//TODO 磁盘使用率，读写量暂定
 

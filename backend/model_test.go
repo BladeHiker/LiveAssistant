@@ -3,6 +3,7 @@ package backend
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestGetAccessKey(t *testing.T) {
@@ -119,5 +120,13 @@ func TestGetFansByAPI(t *testing.T) {
 	roomid := 923833
 	if f := GetFansByAPI(roomid); f == 0 {
 		t.Error("GetFansByAPI(roomid) err:fans=", f)
+	}
+}
+
+func TestGetCompInfo(t *testing.T) {
+	for {
+		i := GetCompInfo()
+		fmt.Println(*i)
+		time.Sleep(5 * time.Second)
 	}
 }

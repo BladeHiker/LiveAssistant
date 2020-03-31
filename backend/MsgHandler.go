@@ -5,6 +5,7 @@ import (
 	_ "LiveAssistant/bilibili"
 	"github.com/go-qamel/qamel"
 	"strings"
+	"time"
 )
 
 func init() {
@@ -32,6 +33,7 @@ func (m *ConnectFeedBack) init() {
 				continue
 			}
 			m.sendCompInfo(string(b))
+			time.Sleep(5 * time.Second)
 		}
 	}()
 }
