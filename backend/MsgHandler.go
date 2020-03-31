@@ -57,7 +57,6 @@ func (m *ConnectFeedBack) receiveRoomID(roomid int) int {
 	}
 
 	m.sendFansNums(GetFansByAPI(roomid))
-
 	return 0
 }
 
@@ -108,23 +107,25 @@ func (h *HandleMsg) init() {
 				}
 			// 处理贵宾进场，如老爷
 			case c := <-bilibili.P.WelCome:
-				w, _ := GetWelCome(c, 1)
-				s, err := json.Marshal(w)
-				if err != nil {
-					continue
+				if w := GetWelCome(c, 1); w != nil {
+					s, err := json.Marshal(w)
+					if err != nil {
+						continue
+					}
+					h.sendWelCome(string(s))
 				}
-				h.sendWelCome(string(s))
 			// 处理房管进场
 			case d := <-bilibili.P.WelComeGuard:
-				w, _ := GetWelCome(d, 2)
-				s, err := json.Marshal(w)
-				if err != nil {
-					continue
+				if w := GetWelCome(d, 2); w != nil {
+					s, err := json.Marshal(w)
+					if err != nil {
+						continue
+					}
+					h.sendWelComeGuard(string(s))
 				}
-				h.sendWelComeGuard(string(s))
 			// 处理舰长等贵宾进场
 			case e := <-bilibili.P.GreatSailing:
-				if _, w := GetWelCome(e, 3); w != "" {
+				if w := GetWelCome(e, 3); w != nil {
 					h.sendGreatSailing(w)
 				}
 			// 处理关注数变动消息

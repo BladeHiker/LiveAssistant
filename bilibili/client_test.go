@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"os/signal"
 	"testing"
-	"time"
 )
 
-var roomid int32 = 21773215
-var key string
-
 func TestNewClient(t *testing.T) {
+	var roomid int32 = 529
+	var key string
+
 	c, err := NewClient(roomid)
 	if err != nil || c == nil {
 		t.Error("NewClient(roomid) err")
@@ -32,7 +33,10 @@ func TestNewClient(t *testing.T) {
 		return
 	}
 	// 测试 30 秒
-	time.Sleep(time.Second * 30)
+	//time.Sleep(time.Second * 30)
+	q:= make(chan os.Signal)
+	signal.Notify(q,os.Interrupt)
+	<-q
 }
 
 // 重写是重新调用新写的c.ReceiveMsgForTest()方法
@@ -180,12 +184,18 @@ func handle() {
 			// 处理舰长等贵宾进场
 			case e := <-P.GreatSailing:
 				fmt.Println("这是一条大航海进场，正在提取出信息 准备处理。。。")
-				w := GetWelCome(e, 3)
-				s, err := json.Marshal(w)
-				if err != nil {
-					continue
-				}
-				fmt.Println("GreatSailing: ", string(s))
+				s := json.Get(e, "data", "copy_writing").ToString()
+				b := []byte(s)
+				fmt.Println(b[15:len(b)-18])
+				fmt.Println(s)
+				fmt.Println(string(b[15:len(b)-18]))
+				fmt.Println(b[15:])
+				//w := GetWelCome(e, 3)
+				//s, err := json.Marshal(w)
+				//if err != nil {
+				//	continue
+				//}
+				fmt.Println("GreatSailing: ", string(e))
 				//h.sendGreatSailing(string(s))
 			// 处理关注数变动消息
 			case f := <-P.Fans:

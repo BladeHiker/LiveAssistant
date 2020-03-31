@@ -152,7 +152,7 @@ func GetGift(src []byte) *UserGift {
 }
 
 // 1是老爷，2是房管，3是舰长/提督等
-func GetWelCome(src []byte, typeID uint8) (*WelCome, string) {
+func GetWelCome(src []byte, typeID uint8) *WelCome {
 	w := new(WelCome)
 	var s string
 	switch typeID {
@@ -169,13 +169,14 @@ func GetWelCome(src []byte, typeID uint8) (*WelCome, string) {
 		w.Title = "房管"
 	case 3:
 		s = json.Get(src, "data", "copy_writing").ToString()
-		return nil, s
+		b := []byte(s)
+		w.Uname = string(b[15:len(b)-18])
+		w.Title = string(b[6:13])
 	}
 	if w.Uname == "" || w.Title == "" {
-		return nil, ""
-	} else {
-		return w, ""
+		return nil
 	}
+	return w
 }
 
 // 根据歌手名和歌曲获取音乐URI地址

@@ -3,6 +3,7 @@ package bilibili
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"github.com/gorilla/websocket"
 	jsoniter "github.com/json-iterator/go"
 	"net/url"
@@ -117,6 +118,8 @@ func (c *Client) SendPackage(packetlen uint32, magic uint16, ver uint16, typeID 
 	// 将包内数据部分追加到数据包内
 	sendData := append(packetHead.Bytes(), data...)
 
+	fmt.Println("发送的数据为",sendData)
+	
 	if err = c.Conn.WriteMessage(websocket.BinaryMessage, sendData); err != nil {
 		return
 	}

@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func main() {
 	// Create Application
 	//app := qamel.NewApplication(len(os.Args), os.Args)
@@ -38,4 +40,7 @@ func main() {
 	//	percent, _ := cpu.Percent(time.Second, false)
 	//	fmt.Printf("cpu percent:%v\n", percent)
 	//}
+
+	b := []byte{227,129,164,227,130,155,233,185,191,230,160,128}
+	fmt.Println(string(b))
 }
