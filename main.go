@@ -1,17 +1,20 @@
 package main
 
-import "fmt"
+import (
+	"github.com/go-qamel/qamel"
+	"os"
+)
 
 func main() {
-	// Create Application
-	//app := qamel.NewApplication(len(os.Args), os.Args)
-	//app.SetApplicationDisplayName("Live Assistant")
-	//
-	//engine := qamel.NewEngine()z
-	//engine.Load("qrc:/res/main.qml")
-	//
-	//// Exec app
-	//app.Exec()
+	//Create Application
+	app := qamel.NewApplication(len(os.Args), os.Args)
+	app.SetApplicationDisplayName("Live Assistant")
+
+	engine := qamel.NewEngine()
+	engine.Load("qrc:/res/main.qml")
+
+	// Exec app
+	app.Exec()
 	//v,_:=mem.VirtualMemory()
 	//fmt.Println(v)
 	//
@@ -40,7 +43,4 @@ func main() {
 	//	percent, _ := cpu.Percent(time.Second, false)
 	//	fmt.Printf("cpu percent:%v\n", percent)
 	//}
-
-	b := []byte{227,129,164,227,130,155,233,185,191,230,160,128}
-	fmt.Println(string(b))
 }
