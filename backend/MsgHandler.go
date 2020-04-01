@@ -19,9 +19,10 @@ type ConnectFeedBack struct {
 	qamel.QmlObject
 
 	_ func()        `constructor:"init"`
-	_ func(int) int `slot:"receiveRoomID"`
+	_ func(int) `slot:"receiveRoomID"`
 	_ func(int)     `signal:"sendFansNums"`
 	_ func(string)  `signal:"sendCompInfo"`
+	_ func(int) `signal:"sendErr"`
 }
 
 func (m *ConnectFeedBack) init() {
@@ -40,6 +41,9 @@ func (m *ConnectFeedBack) init() {
 
 func (m *ConnectFeedBack) receiveRoomID(roomid int) {
 	ConnectAndServe(roomid)
+	if bilibili.UserClient.IsConnected == false {
+		m.sendErr(-1)
+	}
 	m.sendFansNums(GetFansByAPI(roomid))
 
 	// 监听客户端连接状态，如果连接中断，则重新建立客户端连接
