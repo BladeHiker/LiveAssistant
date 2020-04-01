@@ -13,7 +13,7 @@ func TestNewClient(t *testing.T) {
 	var roomid int32 = 529
 	var key string
 
-	c, err := NewClient(roomid)
+	c, err := CreateClient(roomid)
 	if err != nil || c == nil {
 		t.Error("NewClient(roomid) err")
 		return

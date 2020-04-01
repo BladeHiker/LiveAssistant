@@ -38,26 +38,19 @@ func (m *ConnectFeedBack) init() {
 	}()
 }
 
-func (m *ConnectFeedBack) receiveRoomID(roomid int) int {
-	key, err := GetAccessKey(int32(roomid))
-	if err != nil {
-		return -1
-	}
-
-	// 获取客户端实例
-	c, err := bilibili.NewClient(int32(roomid))
-	if err != nil || c == nil {
-		return -1
-	}
-
-	// 启动客户端
-	err = c.Start(key)
-	if err != nil {
-		return -1
-	}
-
+func (m *ConnectFeedBack) receiveRoomID(roomid int) {
+	ConnectAndServe(roomid)
 	m.sendFansNums(GetFansByAPI(roomid))
-	return 0
+
+	// 监听客户端连接状态，如果连接中断，则重新建立客户端连接
+	go func() {
+		for {
+			if bilibili.UserClient.IsConnected == false {
+				ConnectAndServe(roomid)
+				time.Sleep(time.Second * 3)
+			}
+		}
+	}()
 }
 
 // 消息处理模块定义
@@ -126,7 +119,11 @@ func (h *HandleMsg) init() {
 			// 处理舰长等贵宾进场
 			case e := <-bilibili.P.GreatSailing:
 				if w := GetWelCome(e, 3); w != nil {
-					h.sendGreatSailing(w)
+					s, err := json.Marshal(w)
+					if err != nil {
+						continue
+					}
+					h.sendGreatSailing(string(s))
 				}
 			// 处理关注数变动消息
 			case f := <-bilibili.P.Fans:

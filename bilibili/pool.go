@@ -21,7 +21,3 @@ func NewPool() *Pool {
 		Fans:         make(chan []byte, 5),
 	}
 }
-
-func init() {
-	P = NewPool()
-}

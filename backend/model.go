@@ -1,10 +1,9 @@
-/*
-	获取各种参数以及一些工具类型的函数
-*/
+// 获取各种参数以及一些工具类型的函数
 
 package backend
 
 import (
+	"LiveAssistant/bilibili"
 	"fmt"
 	"github.com/json-iterator/go"
 	"github.com/shirou/gopsutil/cpu"
@@ -13,6 +12,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -70,6 +70,26 @@ type LocalInfo struct {
 	DiskUsed       []float64 `json:"disk_used"`  // 磁盘使用率
 	DiskRead       []int64   `json:"disk_read"`  // 磁盘读取字节数
 	DiskWrite      []int64   `json:"disk_write"` // 磁盘写入字节数
+}
+
+func ConnectAndServe(roomid int) {
+	key, err := GetAccessKey(int32(roomid))
+	if err != nil {
+		return
+	}
+
+	// 获取客户端实例
+	bilibili.UserClient, err = bilibili.CreateClient(int32(roomid))
+	if err != nil || bilibili.UserClient == nil {
+		return
+	}
+
+	// 启动客户端
+	err = bilibili.UserClient.Start(key)
+	if err != nil {
+		return
+	}
+	return
 }
 
 // 获取发送握手包必须的 key
@@ -250,6 +270,7 @@ func GetCompInfo() (l *LocalInfo) {
 	l = new(LocalInfo)
 	vm, _ := mem.VirtualMemory()
 	f, _ := cpu.Percent(time.Second, false)
+	f[0],_=strconv.ParseFloat(fmt.Sprintf("%.2f",f[0]),64)
 	io, _ := net.IOCounters(true)
 	for _, v := range io {
 		// qamel 不支持uint64类型，转换一下
@@ -261,7 +282,15 @@ func GetCompInfo() (l *LocalInfo) {
 	l.MemUsedPercent = vm.UsedPercent
 	l.CpuUsedPercent = f[0]
 	l.RecvBytes = l.RecvBytes / 8 / 1024
+	if l.RecvBytes > 1024 {
+		l.RecvBytes /= 1024
+	}
 	l.SendBytes = l.SendBytes / 8 / 1024
+	if l.SendBytes > 1024 {
+		l.SendBytes /= 1024
+	}
+	fmt.Println(l.RecvBytes)
+	fmt.Println(l.SendBytes)
 
 	//TODO 磁盘使用率，读写量暂定
 

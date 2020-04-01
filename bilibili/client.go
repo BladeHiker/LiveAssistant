@@ -3,7 +3,6 @@ package bilibili
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"github.com/gorilla/websocket"
 	jsoniter "github.com/json-iterator/go"
 	"net/url"
@@ -49,6 +48,7 @@ var (
 	DanMuServer = "ks-live-dmcmt-bj6-pm-02.chat.bilibili.com:443"
 	json        = jsoniter.ConfigCompatibleWithStandardLibrary
 	P           *Pool
+	UserClient *Client
 
 	CMDDanmuMsg                  CMD = "DANMU_MSG"                     // 普通弹幕信息
 	CMDSendGift                  CMD = "SEND_GIFT"                     // 普通的礼物，不包含礼物连击
@@ -58,8 +58,17 @@ var (
 	CMDRoomRealTimeMessageUpdate CMD = "ROOM_REAL_TIME_MESSAGE_UPDATE" // 房间关注数变动
 )
 
+func NewClient() *Client {
+	return &Client{
+		RoomID:      0,
+		Online:      0,
+		Conn:        nil,
+		IsConnected: false,
+	}
+}
+
 // 获取一个连接好的客户端实例
-func NewClient(roomid int32) (c *Client, err error) {
+func CreateClient(roomid int32) (c *Client, err error) {
 	c = new(Client)
 
 	realid, err := GetRealRoomID(roomid)
@@ -88,6 +97,9 @@ func (c *Client) Start(key string) (err error) {
 		return err
 	}
 	err = c.SendPackage(0, 16, 1, 7, 1, b)
+	if err != nil {
+		c.IsConnected = false
+	}
 
 	go c.ReceiveMsg()
 	go c.HeartBeat()
@@ -117,8 +129,6 @@ func (c *Client) SendPackage(packetlen uint32, magic uint16, ver uint16, typeID 
 
 	// 将包内数据部分追加到数据包内
 	sendData := append(packetHead.Bytes(), data...)
-
-	fmt.Println("发送的数据为",sendData)
 	
 	if err = c.Conn.WriteMessage(websocket.BinaryMessage, sendData); err != nil {
 		return
@@ -128,45 +138,47 @@ func (c *Client) SendPackage(packetlen uint32, magic uint16, ver uint16, typeID 
 }
 
 func (c *Client) ReceiveMsg() {
-
 	for {
-		_, msg, err := c.Conn.ReadMessage()
-		if err != nil {
-			continue
-		}
-
-		// 根据消息类型进行分类处理
-		switch msg[11] {
-		// 服务器发来的心跳包下行，实体部分仅直播间人气值
-		case 3:
-			h := ByteArrToDecimal(msg[16:])
-			if int32(h) != c.Online {
-				c.Online = int32(h)
-				P.Online <- h
+		if c.IsConnected {
+			_, msg, err := c.Conn.ReadMessage()
+			if err != nil {
+				c.IsConnected = false
+				continue
 			}
 
-		case 5:
-			inflated, err := ZlibInflate(msg[16:])
-			if err == nil {
-				// 代表数据需要压缩，如DANMU_MSG，SEND_GIFT等信息量较大的数据包
-				for len(inflated) > 0 {
-					l := ByteArrToDecimal(inflated[:4])
-					c := json.Get(inflated[16:l], "cmd").ToString()
-					switch CMD(c) {
-					case CMDDanmuMsg:
-						P.DanMu <- inflated[16:l]
-					case CMDSendGift:
-						P.Gift <- inflated[16:l]
-					case CMDWELCOME:
-						P.WelCome <- inflated[16:l]
-					case CMDWelcomeGuard:
-						P.WelComeGuard <- inflated[16:l]
-					case CMDEntry:
-						P.GreatSailing <- inflated[16:l]
-					case CMDRoomRealTimeMessageUpdate:
-						P.Fans <- inflated[16:l]
+			// 根据消息类型进行分类处理
+			switch msg[11] {
+			// 服务器发来的心跳包下行，实体部分仅直播间人气值
+			case 3:
+				h := ByteArrToDecimal(msg[16:])
+				if int32(h) != c.Online {
+					c.Online = int32(h)
+					P.Online <- h
+				}
+
+			case 5:
+				inflated, err := ZlibInflate(msg[16:])
+				if err == nil {
+					// 代表数据需要压缩，如DANMU_MSG，SEND_GIFT等信息量较大的数据包
+					for len(inflated) > 0 {
+						l := ByteArrToDecimal(inflated[:4])
+						c := json.Get(inflated[16:l], "cmd").ToString()
+						switch CMD(c) {
+						case CMDDanmuMsg:
+							P.DanMu <- inflated[16:l]
+						case CMDSendGift:
+							P.Gift <- inflated[16:l]
+						case CMDWELCOME:
+							P.WelCome <- inflated[16:l]
+						case CMDWelcomeGuard:
+							P.WelComeGuard <- inflated[16:l]
+						case CMDEntry:
+							P.GreatSailing <- inflated[16:l]
+						case CMDRoomRealTimeMessageUpdate:
+							P.Fans <- inflated[16:l]
+						}
+						inflated = inflated[l:]
 					}
-					inflated = inflated[l:]
 				}
 			}
 		}
@@ -178,6 +190,7 @@ func (c *Client) HeartBeat() {
 		if c.IsConnected {
 			obj := []byte("5b6f626a656374204f626a6563745d")
 			if err := c.SendPackage(0, 16, 1, 2, 1, obj); err != nil {
+				c.IsConnected = false
 				continue
 			}
 			time.Sleep(30 * time.Second)
