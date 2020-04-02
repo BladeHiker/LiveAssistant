@@ -28,10 +28,10 @@ var
 
 const (
 	// TODO 舰长身份的识别
-	CommonUser = 1      	// 普通用户
-	Vip        = 1 << 1 	// 老爷
-	Guard      = 1 << 2 	// 房管
-	Sailing    = 1 << 3 	// 大航海
+	CommonUser = 1      // 普通用户
+	Vip        = 1 << 1 // 老爷
+	Guard      = 1 << 2 // 房管
+	Sailing    = 1 << 3 // 大航海
 )
 
 type UserDanMu struct {
@@ -190,7 +190,7 @@ func GetWelCome(src []byte, typeID uint8) *WelCome {
 	case 3:
 		s = json.Get(src, "data", "copy_writing").ToString()
 		b := []byte(s)
-		w.Uname = string(b[15:len(b)-18])
+		w.Uname = string(b[15 : len(b)-18])
 		w.Title = string(b[6:13])
 	}
 	if w.Uname == "" || w.Title == "" {
@@ -270,7 +270,7 @@ func GetCompInfo() (l *LocalInfo) {
 	l = new(LocalInfo)
 	vm, _ := mem.VirtualMemory()
 	f, _ := cpu.Percent(time.Second, false)
-	f[0],_=strconv.ParseFloat(fmt.Sprintf("%.2f",f[0]),64)
+	f[0], _ = strconv.ParseFloat(fmt.Sprintf("%.2f", f[0]), 64)
 	io, _ := net.IOCounters(true)
 	for _, v := range io {
 		// qamel 不支持uint64类型，转换一下

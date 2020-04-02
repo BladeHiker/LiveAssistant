@@ -18,11 +18,11 @@ func init() {
 type ConnectFeedBack struct {
 	qamel.QmlObject
 
-	_ func()        `constructor:"init"`
-	_ func(int) `slot:"receiveRoomID"`
-	_ func(int)     `signal:"sendFansNums"`
-	_ func(string)  `signal:"sendCompInfo"`
-	_ func(int) `signal:"sendErr"`
+	_ func()       `constructor:"init"`
+	_ func(int)    `slot:"receiveRoomID"`
+	_ func(int)    `signal:"sendFansNums"`
+	_ func(string) `signal:"sendCompInfo"`
+	_ func(int)    `signal:"sendErr"`
 }
 
 func (m *ConnectFeedBack) init() {
@@ -43,6 +43,8 @@ func (m *ConnectFeedBack) receiveRoomID(roomid int) {
 	ConnectAndServe(roomid)
 	if bilibili.UserClient.IsConnected == false {
 		m.sendErr(-1)
+	} else {
+		m.sendErr(0)
 	}
 	m.sendFansNums(GetFansByAPI(roomid))
 
@@ -50,8 +52,8 @@ func (m *ConnectFeedBack) receiveRoomID(roomid int) {
 	go func() {
 		for {
 			if bilibili.UserClient.IsConnected == false {
-				ConnectAndServe(roomid)
 				time.Sleep(time.Second * 3)
+				ConnectAndServe(roomid)
 			}
 		}
 	}()
