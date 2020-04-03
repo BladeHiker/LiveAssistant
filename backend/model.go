@@ -23,6 +23,7 @@ var
 	userInfoUrl = "https://api.bilibili.com/x/space/acc/info"           //mid=382297465&jsonp=jsonp
 	server      = "shiluo.design:3000"
 	RoomInfoURI = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom" // params:?room_id=923833
+	// 由于将点歌单独作为一个模块，因此单独拿出来
 	MusicInfo   chan string
 )
 
@@ -66,12 +67,12 @@ type LocalInfo struct {
 	MemUsedPercent float64   `json:"mem"`        // 内存使用率
 	CpuUsedPercent float64   `json:"cpu"`        // CPU使用率
 	SendBytes      int64     `json:"send"`       // 单位时间发送字节数
-	RecvBytes      int64     `json:"recv"`       // 单位时间接收字节数
 	DiskUsed       []float64 `json:"disk_used"`  // 磁盘使用率
 	DiskRead       []int64   `json:"disk_read"`  // 磁盘读取字节数
 	DiskWrite      []int64   `json:"disk_write"` // 磁盘写入字节数
 }
 
+// ConnectAndServe 重新维持客户端连接
 func ConnectAndServe(roomid int) {
 	key, err := GetAccessKey(int32(roomid))
 	if err != nil {
@@ -171,7 +172,7 @@ func GetGift(src []byte) *UserGift {
 	return g
 }
 
-// 1是老爷，2是房管，3是舰长/提督等
+// typeID = 1是老爷，2是房管，3是舰长/提督等大航海
 func GetWelCome(src []byte, typeID uint8) *WelCome {
 	w := new(WelCome)
 	var s string
@@ -266,6 +267,7 @@ func GetFansByAPI(roomid int) int {
 	return fans
 }
 
+// 获取客户端CPU MEM 网络信息
 func GetCompInfo() (l *LocalInfo) {
 	l = new(LocalInfo)
 	vm, _ := mem.VirtualMemory()
@@ -275,13 +277,11 @@ func GetCompInfo() (l *LocalInfo) {
 	for _, v := range io {
 		// qamel 不支持uint64类型，转换一下
 		l.SendBytes += int64(v.BytesSent)
-		l.RecvBytes += int64(v.BytesRecv)
 	}
 
 	// 不判错，若获取失败返回零值
 	l.MemUsedPercent = vm.UsedPercent
 	l.CpuUsedPercent = f[0]
-	l.RecvBytes = l.RecvBytes / 1024
 	l.SendBytes = l.SendBytes / 1024
 
 	//TODO 磁盘使用率，读写量暂定

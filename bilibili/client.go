@@ -14,7 +14,7 @@ type Client struct {
 	RoomID      int32           // 房间 ID
 	Online      int32           // 用来判断人气是否变动
 	Conn        *websocket.Conn // 连接后的对象
-	IsConnected bool
+	IsConnected bool            // 用来判断是否客户端断开连接，需要重新连接
 }
 
 // HandShakeMsg 定义了握手包的信息格式
@@ -48,7 +48,7 @@ var (
 	DanMuServer = "ks-live-dmcmt-bj6-pm-02.chat.bilibili.com:443"
 	json        = jsoniter.ConfigCompatibleWithStandardLibrary
 	P           *Pool
-	UserClient *Client
+	UserClient  *Client
 
 	CMDDanmuMsg                  CMD = "DANMU_MSG"                     // 普通弹幕信息
 	CMDSendGift                  CMD = "SEND_GIFT"                     // 普通的礼物，不包含礼物连击
@@ -76,7 +76,7 @@ func CreateClient(roomid int32) (c *Client, err error) {
 		return nil, err
 	}
 
-	// 连接弹幕服务器并发送握手包
+	// 连接弹幕服务器
 	u := url.URL{Scheme: "wss", Host: DanMuServer, Path: "sub"}
 	c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -96,6 +96,7 @@ func (c *Client) Start(key string) (err error) {
 	if err != nil {
 		return err
 	}
+	// 发送握手包
 	err = c.SendPackage(0, 16, 1, 7, 1, b)
 	if err != nil {
 		c.IsConnected = false
@@ -129,7 +130,7 @@ func (c *Client) SendPackage(packetlen uint32, magic uint16, ver uint16, typeID 
 
 	// 将包内数据部分追加到数据包内
 	sendData := append(packetHead.Bytes(), data...)
-	
+
 	if err = c.Conn.WriteMessage(websocket.BinaryMessage, sendData); err != nil {
 		return
 	}
@@ -188,6 +189,7 @@ func (c *Client) ReceiveMsg() {
 func (c *Client) HeartBeat() {
 	for {
 		if c.IsConnected {
+			// 每半分钟发送一次内容是 两个空对象 的数据包作为心跳包，维持连接
 			obj := []byte("5b6f626a656374204f626a6563745d")
 			if err := c.SendPackage(0, 16, 1, 2, 1, obj); err != nil {
 				c.IsConnected = false

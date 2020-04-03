@@ -27,6 +27,7 @@ type ConnectFeedBack struct {
 
 func (m *ConnectFeedBack) init() {
 	go func() {
+		// 3 秒一次更新一次客户端信息
 		for {
 			i := GetCompInfo()
 			b, err := json.Marshal(i)
@@ -34,13 +35,14 @@ func (m *ConnectFeedBack) init() {
 				continue
 			}
 			m.sendCompInfo(string(b))
-			time.Sleep(5 * time.Second)
+			time.Sleep(3 * time.Second)
 		}
 	}()
 }
 
 func (m *ConnectFeedBack) receiveRoomID(roomid int) {
 	ConnectAndServe(roomid)
+	// 给初次登陆的 QML 传递一个返回信息代表连接成功或失败
 	if bilibili.UserClient.IsConnected == false {
 		m.sendErr(-1)
 	} else {
