@@ -9,12 +9,12 @@ import (
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/net"
+	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
-	"github.com/tidwall/gjson"
 )
 
 var
@@ -25,12 +25,12 @@ var
 	server      = "shiluo.design:3000"
 	RoomInfoURI = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom" // params:?room_id=923833
 	// 由于将点歌单独作为一个模块，因此单独拿出来
-	MusicInfo   chan string
+	MusicInfo chan string
 )
 
 const (
 	// TODO 舰长身份的识别
-	CommonUser = 1      // 普通用户
+	CommonUser = 0      // 普通用户
 	Vip        = 1 << 1 // 老爷
 	Guard      = 1 << 2 // 房管
 	Sailing    = 1 << 3 // 大航海
@@ -109,7 +109,7 @@ func GetAccessKey(roomid int32) (key string, err error) {
 	if err != nil {
 		return
 	}
-	key = gjson.GetBytes(rawdata,"data.token").String()
+	key = gjson.GetBytes(rawdata, "data.token").String()
 
 	return
 }
@@ -129,7 +129,7 @@ func GetUserAvatar(userid int32) (ava string, err error) {
 	if err != nil {
 		return
 	}
-	ava = gjson.GetBytes(rawdata,"data.face").String()
+	ava = gjson.GetBytes(rawdata, "data.face").String()
 
 	return
 }
@@ -144,16 +144,16 @@ func GetDanMu(src []byte) *UserDanMu {
 	}
 	d.Avatar = a
 
-	d.Uname = gjson.GetBytes(src,"info.2.1").String()
-	d.Text = gjson.GetBytes(src,"info.1").String()
-	d.MedalName = gjson.GetBytes(src,"info.3.1").String()
-	d.MedalLevel = int(gjson.GetBytes(src,"info.3.0").Int())
-	d.UserLevel = int(gjson.GetBytes(src,"info.4.0").Int())
+	d.Uname = gjson.GetBytes(src, "info.2.1").String()
+	d.Text = gjson.GetBytes(src, "info.1").String()
+	d.MedalName = gjson.GetBytes(src, "info.3.1").String()
+	d.MedalLevel = int(gjson.GetBytes(src, "info.3.0").Int())
+	d.UserLevel = int(gjson.GetBytes(src, "info.4.0").Int())
 	// 判定用户称呼，比如 房管 | 老爷 | 舰长等等，用二进制位按位与表示
 
-	guard := int(gjson.GetBytes(src,"info.2.2").Int())
-	vip := int(gjson.GetBytes(src,"info.2.3").Int())
-	d.Utitle = guard | vip | CommonUser
+	guard := int(gjson.GetBytes(src, "info.2.2").Int())
+	vip := int(gjson.GetBytes(src, "info.2.3").Int())
+	d.Utitle = guard << 1 | vip << 2 | CommonUser
 
 	return d
 }
@@ -162,10 +162,10 @@ func GetDanMu(src []byte) *UserDanMu {
 func GetGift(src []byte) *UserGift {
 	g := new(UserGift)
 
-	g.Uname = gjson.GetBytes(src,"data.uname").String()
-	g.Avatar = gjson.GetBytes(src,"data.face").String()
-	g.Action = gjson.GetBytes(src,"data.action").String()
-	g.Gname = gjson.GetBytes(src,"data.giftName").String()
+	g.Uname = gjson.GetBytes(src, "data.uname").String()
+	g.Avatar = gjson.GetBytes(src, "data.face").String()
+	g.Action = gjson.GetBytes(src, "data.action").String()
+	g.Gname = gjson.GetBytes(src, "data.giftName").String()
 	g.Nums = int32(gjson.GetBytes(src, "data.num").Int())
 	g.Price = int(gjson.GetBytes(src, "data.price").Int())
 
@@ -181,18 +181,18 @@ func GetWelCome(src []byte, typeID uint8) *WelCome {
 	var s string
 	switch typeID {
 	case 1:
-		w.Uname = gjson.GetBytes(src,"data.uname").String()
-		level := int(gjson.GetBytes(src,"data.svip").Int())
+		w.Uname = gjson.GetBytes(src, "data.uname").String()
+		level := int(gjson.GetBytes(src, "data.svip").Int())
 		if level == 1 {
 			w.Title = "年费老爷"
 		} else {
 			w.Title = "老爷"
 		}
 	case 2:
-		w.Uname = gjson.GetBytes(src,"data.username").String()
+		w.Uname = gjson.GetBytes(src, "data.username").String()
 		w.Title = "房管"
 	case 3:
-		s = gjson.GetBytes(src,"data.copy_writing").String()
+		s = gjson.GetBytes(src, "data.copy_writing").String()
 		b := []byte(s)
 		w.Uname = string(b[15 : len(b)-18])
 		w.Title = string(b[6:13])
@@ -226,8 +226,7 @@ func GetMusicURI(singer, mname string) (URI string, err error) {
 		return
 	}
 
-	id := int(gjson.GetBytes(rawdata,"result.songs.0.id").Int())
-
+	id := int(gjson.GetBytes(rawdata, "result.songs.0.id").Int())
 
 	// 根据id获取歌曲uri
 	r := fmt.Sprintf("http://%s/song/url?id=%d", server, id)
@@ -243,7 +242,7 @@ func GetMusicURI(singer, mname string) (URI string, err error) {
 		return
 	}
 
-	URI = gjson.GetBytes(data,"data.0.url").String()
+	URI = gjson.GetBytes(data, "data.0.url").String()
 
 	return
 }

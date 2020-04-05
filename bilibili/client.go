@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"github.com/gorilla/websocket"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/tidwall/gjson"
 	"net/url"
 	"time"
 )
@@ -163,7 +164,7 @@ func (c *Client) ReceiveMsg() {
 					// 代表数据需要压缩，如DANMU_MSG，SEND_GIFT等信息量较大的数据包
 					for len(inflated) > 0 {
 						l := ByteArrToDecimal(inflated[:4])
-						c := json.Get(inflated[16:l], "cmd").ToString()
+						c := gjson.GetBytes(inflated[16:l],"cmd").String()
 						switch CMD(c) {
 						case CMDDanmuMsg:
 							P.DanMu <- inflated[16:l]

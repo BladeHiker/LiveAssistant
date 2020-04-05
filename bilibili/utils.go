@@ -62,6 +62,6 @@ func GetRealRoomID(short int32) (realID int, err error) {
 		fmt.Println("ioutil.ReadAll(resp.Body) err: ", err)
 		return 0, err
 	}
-	realID = int(gjson.GetBytes(rawdata,"data.room_id").Int())
+	realID = int(gjson.GetBytes(rawdata, "data.room_id").Int())
 	return realID, nil
 }

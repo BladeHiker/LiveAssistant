@@ -86,7 +86,7 @@ func (h *HandleMsg) init() {
 			select {
 			// 处理用户弹幕
 			case a := <-bilibili.P.DanMu:
-				if e := GetDanMu(a); e != nil && h.Button == false {
+				if e := GetDanMu(a); h.Button == false && e != nil {
 					s, err := json.Marshal(e)
 					if err != nil {
 						continue
@@ -146,20 +146,17 @@ func (h *HandleMsg) init() {
 }
 
 func (h *HandleMsg) musicControl(b bool, key string) {
-	go func() {
-		for {
-			// 代表打开点歌功能
-			if b == true && key != "" {
-				h.Button = true
-				h.Key = key
-			} else if b == false {
-				h.Button = false
-				h.Key = ""
-			} else {
-				continue
-			}
-		}
-	}()
+	// 代表打开点歌功能
+	if b == true && key != "" {
+		MusicInfo = make(chan string, 20)
+		h.Button = true
+		h.Key = key
+	} else if b == false {
+		h.Button = false
+		h.Key = ""
+	} else {
+		return
+	}
 }
 
 // 音乐模块定义
@@ -171,7 +168,6 @@ type Music struct {
 }
 
 func (m *Music) init() {
-	MusicInfo := make(chan string, 10)
 	go func() {
 		for {
 			select {
