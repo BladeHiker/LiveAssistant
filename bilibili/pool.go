@@ -8,6 +8,7 @@ type Pool struct {
 	GreatSailing chan []byte
 	Online       chan int
 	Fans         chan []byte
+	MusicInfo    chan string
 }
 
 func NewPool() *Pool {
@@ -19,5 +20,6 @@ func NewPool() *Pool {
 		GreatSailing: make(chan []byte, 10),
 		Online:       make(chan int, 5),
 		Fans:         make(chan []byte, 5),
+		MusicInfo:    make(chan string, 20),
 	}
 }

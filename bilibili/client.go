@@ -12,10 +12,11 @@ import (
 
 // 客户端实例
 type Client struct {
-	RoomID      int32           // 房间 ID
-	Online      int32           // 用来判断人气是否变动
-	Conn        *websocket.Conn // 连接后的对象
-	IsConnected bool            // 用来判断是否客户端断开连接，需要重新连接
+	RoomID        int32           // 房间 ID
+	Online        int32           // 用来判断人气是否变动
+	Conn          *websocket.Conn // 连接后的对象
+	IsConnected   bool            // 客户端是否连接
+	NeedReConnect chan bool       // 通知客户端已经断开连接
 }
 
 // HandShakeMsg 定义了握手包的信息格式
@@ -61,10 +62,11 @@ var (
 
 func NewClient() *Client {
 	return &Client{
-		RoomID:      0,
-		Online:      0,
-		Conn:        nil,
-		IsConnected: false,
+		RoomID:        0,
+		Online:        0,
+		Conn:          nil,
+		IsConnected:   false,
+		NeedReConnect: make(chan bool),
 	}
 }
 
@@ -101,6 +103,7 @@ func (c *Client) Start(key string) (err error) {
 	err = c.SendPackage(0, 16, 1, 7, 1, b)
 	if err != nil {
 		c.IsConnected = false
+		c.NeedReConnect <- true
 	}
 
 	go c.ReceiveMsg()
@@ -145,6 +148,7 @@ func (c *Client) ReceiveMsg() {
 			_, msg, err := c.Conn.ReadMessage()
 			if err != nil {
 				c.IsConnected = false
+				c.NeedReConnect <- true
 				continue
 			}
 
@@ -164,7 +168,7 @@ func (c *Client) ReceiveMsg() {
 					// 代表数据需要压缩，如DANMU_MSG，SEND_GIFT等信息量较大的数据包
 					for len(inflated) > 0 {
 						l := ByteArrToDecimal(inflated[:4])
-						c := gjson.GetBytes(inflated[16:l],"cmd").String()
+						c := gjson.GetBytes(inflated[16:l], "cmd").String()
 						switch CMD(c) {
 						case CMDDanmuMsg:
 							P.DanMu <- inflated[16:l]

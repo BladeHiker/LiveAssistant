@@ -4,6 +4,7 @@ import (
 	"LiveAssistant/bilibili"
 	_ "LiveAssistant/bilibili"
 	"github.com/go-qamel/qamel"
+	"github.com/tidwall/gjson"
 	"strings"
 	"time"
 )
@@ -11,7 +12,6 @@ import (
 func init() {
 	RegisterQmlConnectFeedBack("ConnectFeedBack", 1, 0, "ConnectFeedBack")
 	RegisterQmlHandleMsg("HandleMsg", 1, 0, "HandleMsg")
-	RegisterQmlMusic("Music", 1, 0, "Music")
 }
 
 // 连接直播间模块定义
@@ -50,11 +50,11 @@ func (m *ConnectFeedBack) receiveRoomID(roomid int) {
 	}
 	m.sendFansNums(GetFansByAPI(roomid))
 
-	// 监听客户端连接状态，如果连接中断，则重新建立客户端连接
+	// 如果有断开连接的通知，则重新建立客户端连接
 	go func() {
 		for {
-			if bilibili.UserClient.IsConnected == false {
-				time.Sleep(time.Second * 3)
+			select {
+			case <-bilibili.UserClient.NeedReConnect:
 				ConnectAndServe(roomid)
 			}
 		}
@@ -66,13 +66,14 @@ type HandleMsg struct {
 	qamel.QmlObject
 	_ func() `constructor:"init"`
 
-	_ func(string) `signal:"sendDanMu"`
-	_ func(string) `signal:"sendGift"`
-	_ func(string) `signal:"sendWelCome"`
-	_ func(string) `signal:"sendWelComeGuard"`
-	_ func(string) `signal:"sendGreatSailing"`
-	_ func(int)    `signal:"sendOnlineChanged"`
-	_ func(int)    `signal:"sendFansChanged"`
+	_ func(string)         `signal:"sendDanMu"`
+	_ func(string)         `signal:"sendGift"`
+	_ func(string)         `signal:"sendWelCome"`
+	_ func(string)         `signal:"sendWelComeGuard"`
+	_ func(string)         `signal:"sendGreatSailing"`
+	_ func(int)            `signal:"sendOnlineChanged"`
+	_ func(int)            `signal:"sendFansChanged"`
+	_ func(string, string) `signal:"sendMusicURI"`
 
 	_      func(bool, string) `slot:"musicControl"`
 	Button bool               // 点歌功能的开关
@@ -86,15 +87,16 @@ func (h *HandleMsg) init() {
 			select {
 			// 处理用户弹幕
 			case a := <-bilibili.P.DanMu:
-				if e := GetDanMu(a); h.Button == false && e != nil {
+				if e := GetDanMu(a); e != nil {
 					s, err := json.Marshal(e)
 					if err != nil {
 						continue
 					}
 					h.sendDanMu(string(s))
-				} else if e != nil && h.Button == true {
-					if strings.HasPrefix(e.Text, h.Key) {
-						MusicInfo <- e.Text
+					if h.Button == true {
+						if strings.HasPrefix(e.Text, h.Key) {
+							bilibili.P.MusicInfo <- e.Text
+						}
 					}
 				}
 			// 处理用户礼物
@@ -135,11 +137,18 @@ func (h *HandleMsg) init() {
 				}
 			// 处理关注数变动消息
 			case f := <-bilibili.P.Fans:
-				i := json.Get(f, "data", "fans").ToInt()
+				i := int(gjson.GetBytes(f, "data.fans").Int())
 				h.sendFansChanged(i)
 			// 处理在线人气变动处理
 			case g := <-bilibili.P.Online:
 				h.sendOnlineChanged(g)
+			case j := <-bilibili.P.MusicInfo:
+				s := strings.Split(j, " ")
+				uri, err := GetMusicURI(s[1])
+				if err != nil || uri == "" {
+					continue
+				}
+				h.sendMusicURI(uri, s[1])
 			}
 		}
 	}()
@@ -148,37 +157,10 @@ func (h *HandleMsg) init() {
 func (h *HandleMsg) musicControl(b bool, key string) {
 	// 代表打开点歌功能
 	if b == true && key != "" {
-		MusicInfo = make(chan string, 20)
 		h.Button = true
 		h.Key = key
-	} else if b == false {
+	} else {
 		h.Button = false
 		h.Key = ""
-	} else {
-		return
 	}
-}
-
-// 音乐模块定义
-type Music struct {
-	qamel.QmlObject
-
-	_ func()                       `constructor:"init"`
-	_ func(string, string, string) `signal:"sendMusicURI"`
-}
-
-func (m *Music) init() {
-	go func() {
-		for {
-			select {
-			case text := <-MusicInfo:
-				s := strings.Split(text, " ")
-				uri, err := GetMusicURI(s[1], s[2])
-				if err != nil || uri == "" {
-					continue
-				}
-				m.sendMusicURI(uri, s[1], s[2])
-			}
-		}
-	}()
 }

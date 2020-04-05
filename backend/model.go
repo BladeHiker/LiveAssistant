@@ -25,7 +25,6 @@ var
 	server      = "shiluo.design:3000"
 	RoomInfoURI = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom" // params:?room_id=923833
 	// 由于将点歌单独作为一个模块，因此单独拿出来
-	MusicInfo chan string
 )
 
 const (
@@ -204,10 +203,10 @@ func GetWelCome(src []byte, typeID uint8) *WelCome {
 }
 
 // 根据歌手名和歌曲获取音乐URI地址
-func GetMusicURI(singer, mname string) (URI string, err error) {
+func GetMusicURI(keywords string) (URI string, err error) {
 	// 根据歌手名，音乐名获取歌曲id
 	q := url.Values{}
-	q.Set("keywords", singer+" "+mname)
+	q.Set("keywords", keywords)
 	q.Set("limit", "1")
 	u := url.URL{
 		Scheme:   "http",

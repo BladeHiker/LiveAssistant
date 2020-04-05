@@ -2,6 +2,7 @@ package backend
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -109,11 +110,13 @@ func TestGetGift(t *testing.T) {
 }
 
 func TestGetMusicURI(t *testing.T) {
-	singer, mname := "beyond", "海阔天空"
-	_, err := GetMusicURI(singer, mname)
+	text := "点歌 周杰伦 稻香"
+	s := strings.Split(text, " ")
+	uri, err := GetMusicURI(s[1], s[2])
 	if err != nil {
 		t.Error("GetMusicURI(singer,mname) err:", err)
 	}
+	fmt.Println(uri,s[1],s[2])
 }
 
 func TestGetFansByAPI(t *testing.T) {
