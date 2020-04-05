@@ -11,7 +11,7 @@ import (
 func init() {
 	RegisterQmlConnectFeedBack("ConnectFeedBack", 1, 0, "ConnectFeedBack")
 	RegisterQmlHandleMsg("HandleMsg", 1, 0, "HandleMsg")
-	RegisterQmlHandleMsg("Music", 1, 0, "Music")
+	RegisterQmlMusic("Music", 1, 0, "Music")
 }
 
 // 连接直播间模块定义

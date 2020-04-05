@@ -5,6 +5,7 @@ import (
 	"compress/zlib"
 	"encoding/hex"
 	"fmt"
+	"github.com/tidwall/gjson"
 	"io"
 	"io/ioutil"
 	"math"
@@ -61,6 +62,6 @@ func GetRealRoomID(short int32) (realID int, err error) {
 		fmt.Println("ioutil.ReadAll(resp.Body) err: ", err)
 		return 0, err
 	}
-	realID = json.Get(rawdata, "data", "room_id").ToInt()
+	realID = int(gjson.GetBytes(rawdata,"data.room_id").Int())
 	return realID, nil
 }

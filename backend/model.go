@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+	"github.com/tidwall/gjson"
 )
 
 var
@@ -108,7 +109,8 @@ func GetAccessKey(roomid int32) (key string, err error) {
 	if err != nil {
 		return
 	}
-	key = json.Get(rawdata, "data", "token").ToString()
+	key = gjson.GetBytes(rawdata,"data.token").String()
+
 	return
 }
 
@@ -127,7 +129,7 @@ func GetUserAvatar(userid int32) (ava string, err error) {
 	if err != nil {
 		return
 	}
-	ava = json.Get(rawdata, "data", "face").ToString()
+	ava = gjson.GetBytes(rawdata,"data.face").String()
 
 	return
 }
@@ -141,16 +143,16 @@ func GetDanMu(src []byte) *UserDanMu {
 		return nil
 	}
 	d.Avatar = a
-	d.Uname = json.Get(src, "info", 2, 1).ToString()
-	d.Text = json.Get(src, "info", 1).ToString()
-	d.MedalName = json.Get(src, "info", 3, 1).ToString()
-	d.MedalLevel = json.Get(src, "info", 3, 0).ToInt()
-	d.UserLevel = json.Get(src, "info", 4, 0).ToInt()
 
+	d.Uname = gjson.GetBytes(src,"info.2.1").String()
+	d.Text = gjson.GetBytes(src,"info.1").String()
+	d.MedalName = gjson.GetBytes(src,"info.3.1").String()
+	d.MedalLevel = int(gjson.GetBytes(src,"info.3.0").Int())
+	d.UserLevel = int(gjson.GetBytes(src,"info.4.0").Int())
 	// 判定用户称呼，比如 房管 | 老爷 | 舰长等等，用二进制位按位与表示
 
-	guard := json.Get(src, "info", 2, 2).ToInt()
-	vip := json.Get(src, "info", 2, 3).ToInt()
+	guard := int(gjson.GetBytes(src,"info.2.2").Int())
+	vip := int(gjson.GetBytes(src,"info.2.3").Int())
 	d.Utitle = guard | vip | CommonUser
 
 	return d
@@ -159,12 +161,13 @@ func GetDanMu(src []byte) *UserDanMu {
 // GetGift 获取一条礼物信息
 func GetGift(src []byte) *UserGift {
 	g := new(UserGift)
-	g.Uname = json.Get(src, "data", "uname").ToString()
-	g.Avatar = json.Get(src, "data", "face").ToString()
-	g.Action = json.Get(src, "data", "action").ToString()
-	g.Gname = json.Get(src, "data", "giftName").ToString()
-	g.Nums = json.Get(src, "data", "num").ToInt32()
-	g.Price = json.Get(src, "data", "price").ToInt()
+
+	g.Uname = gjson.GetBytes(src,"data.uname").String()
+	g.Avatar = gjson.GetBytes(src,"data.face").String()
+	g.Action = gjson.GetBytes(src,"data.action").String()
+	g.Gname = gjson.GetBytes(src,"data.giftName").String()
+	g.Nums = int32(gjson.GetBytes(src, "data.num").Int())
+	g.Price = int(gjson.GetBytes(src, "data.price").Int())
 
 	if g.Price == 0 {
 		return nil
@@ -178,18 +181,18 @@ func GetWelCome(src []byte, typeID uint8) *WelCome {
 	var s string
 	switch typeID {
 	case 1:
-		w.Uname = json.Get(src, "data", "uname").ToString()
-		level := json.Get(src, "data", "svip").ToInt()
+		w.Uname = gjson.GetBytes(src,"data.uname").String()
+		level := int(gjson.GetBytes(src,"data.svip").Int())
 		if level == 1 {
 			w.Title = "年费老爷"
 		} else {
 			w.Title = "老爷"
 		}
 	case 2:
-		w.Uname = json.Get(src, "data", "username").ToString()
+		w.Uname = gjson.GetBytes(src,"data.username").String()
 		w.Title = "房管"
 	case 3:
-		s = json.Get(src, "data", "copy_writing").ToString()
+		s = gjson.GetBytes(src,"data.copy_writing").String()
 		b := []byte(s)
 		w.Uname = string(b[15 : len(b)-18])
 		w.Title = string(b[6:13])
@@ -222,9 +225,9 @@ func GetMusicURI(singer, mname string) (URI string, err error) {
 	if err != nil {
 		return
 	}
-	id := json.Get(rawdata, "result", "songs", 0, "id").ToInt()
 
-	fmt.Println("歌曲id是", id)
+	id := int(gjson.GetBytes(rawdata,"result.songs.0.id").Int())
+
 
 	// 根据id获取歌曲uri
 	r := fmt.Sprintf("http://%s/song/url?id=%d", server, id)
@@ -240,9 +243,7 @@ func GetMusicURI(singer, mname string) (URI string, err error) {
 		return
 	}
 
-	URI = json.Get(data, "data", 0, "url").ToString()
-
-	fmt.Println("URI是", URI)
+	URI = gjson.GetBytes(data,"data.0.url").String()
 
 	return
 }
@@ -262,8 +263,8 @@ func GetFansByAPI(roomid int) int {
 	if err != nil {
 		return 0
 	}
+	fans := int(gjson.GetBytes(rawdata, "data.anchor_info.relation_info.attention").Int())
 
-	fans := json.Get(rawdata, "data", "anchor_info", "relation_info", "attention").ToInt()
 	return fans
 }
 
