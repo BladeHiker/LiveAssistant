@@ -24,7 +24,6 @@ var
 	userInfoUrl = "https://api.bilibili.com/x/space/acc/info"           //mid=382297465&jsonp=jsonp
 	server      = "shiluo.design:3000"
 	RoomInfoURI = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom" // params:?room_id=923833
-	// 由于将点歌单独作为一个模块，因此单独拿出来
 )
 
 const (
@@ -203,7 +202,7 @@ func GetWelCome(src []byte, typeID uint8) *WelCome {
 }
 
 // 根据歌手名和歌曲获取音乐URI地址
-func GetMusicURI(keywords string) (URI string, err error) {
+func GetMusicURI(keywords string) (URI ,singer,name string, err error) {
 	// 根据歌手名，音乐名获取歌曲id
 	q := url.Values{}
 	q.Set("keywords", keywords)
@@ -226,6 +225,8 @@ func GetMusicURI(keywords string) (URI string, err error) {
 	}
 
 	id := int(gjson.GetBytes(rawdata, "result.songs.0.id").Int())
+	name = gjson.GetBytes(rawdata,"result.songs.0.name").String()
+	singer = gjson.GetBytes(rawdata,"result.songs.0.artists.0.name").String()
 
 	// 根据id获取歌曲uri
 	r := fmt.Sprintf("http://%s/song/url?id=%d", server, id)

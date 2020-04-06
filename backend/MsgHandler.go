@@ -6,7 +6,6 @@ import (
 	"github.com/go-qamel/qamel"
 	"github.com/tidwall/gjson"
 	"strings"
-	"time"
 )
 
 func init() {
@@ -18,27 +17,27 @@ func init() {
 type ConnectFeedBack struct {
 	qamel.QmlObject
 
-	_ func()       `constructor:"init"`
+	// _ func()       `constructor:"init"`
 	_ func(int)    `slot:"receiveRoomID"`
 	_ func(int)    `signal:"sendFansNums"`
 	_ func(string) `signal:"sendCompInfo"`
 	_ func(int)    `signal:"sendErr"`
 }
 
-func (m *ConnectFeedBack) init() {
-	go func() {
-		// 3 秒一次更新一次客户端信息
-		for {
-			i := GetCompInfo()
-			b, err := json.Marshal(i)
-			if err != nil {
-				continue
-			}
-			m.sendCompInfo(string(b))
-			time.Sleep(3 * time.Second)
-		}
-	}()
-}
+//func (m *ConnectFeedBack) init() {
+//	go func() {
+//		// 3 秒一次更新一次客户端信息
+//		//for {
+//		//	i := GetCompInfo()
+//		//	b, err := json.Marshal(i)
+//		//	if err != nil {
+//		//		continue
+//		//	}
+//		//	m.sendCompInfo(string(b))
+//		//	time.Sleep(3 * time.Second)
+//		//}
+//	}()
+//}
 
 func (m *ConnectFeedBack) receiveRoomID(roomid int) {
 	ConnectAndServe(roomid)
@@ -66,17 +65,17 @@ type HandleMsg struct {
 	qamel.QmlObject
 	_ func() `constructor:"init"`
 
-	_ func(string)         `signal:"sendDanMu"`
-	_ func(string)         `signal:"sendGift"`
-	_ func(string)         `signal:"sendWelCome"`
-	_ func(string)         `signal:"sendWelComeGuard"`
-	_ func(string)         `signal:"sendGreatSailing"`
-	_ func(int)            `signal:"sendOnlineChanged"`
-	_ func(int)            `signal:"sendFansChanged"`
-	_ func(string, string) `signal:"sendMusicURI"`
+	_ func(string)                 `signal:"sendDanMu"`
+	_ func(string)                 `signal:"sendGift"`
+	_ func(string)                 `signal:"sendWelCome"`
+	_ func(string)                 `signal:"sendWelComeGuard"`
+	_ func(string)                 `signal:"sendGreatSailing"`
+	_ func(int)                    `signal:"sendOnlineChanged"`
+	_ func(int)                    `signal:"sendFansChanged"`
+	_ func(string, string, string) `signal:"sendMusicURI"`
 
 	_      func(bool, string) `slot:"musicControl"`
-	Button bool               // 点歌功能的开关
+	Button bool               // 点歌模块开关
 	Key    string             // 点歌关键字
 }
 
@@ -143,12 +142,12 @@ func (h *HandleMsg) init() {
 			case g := <-bilibili.P.Online:
 				h.sendOnlineChanged(g)
 			case j := <-bilibili.P.MusicInfo:
-				s := strings.Split(j, " ")
-				uri, err := GetMusicURI(s[1])
+				s := strings.SplitN(j, " ", 1)
+				uri, singer, name, err := GetMusicURI(s[1])
 				if err != nil || uri == "" {
 					continue
 				}
-				h.sendMusicURI(uri, s[1])
+				h.sendMusicURI(uri, name, singer)
 			}
 		}
 	}()

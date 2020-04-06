@@ -110,13 +110,18 @@ func TestGetGift(t *testing.T) {
 }
 
 func TestGetMusicURI(t *testing.T) {
-	text := "点歌 周杰伦 稻香"
-	s := strings.Split(text, " ")
-	uri, err := GetMusicURI(s[1], s[2])
-	if err != nil {
-		t.Error("GetMusicURI(singer,mname) err:", err)
+	texts := []string{
+		"点歌 beyond 海阔天空",
+		"点歌 唯一纪念 李琦",
 	}
-	fmt.Println(uri,s[1],s[2])
+	for _, text := range texts {
+		s := strings.SplitN(text, " ", 1)
+		uri, singer, name, err := GetMusicURI(s[1])
+		if err != nil {
+			t.Error("GetMusicURI(singer,mname) err:", err)
+		}
+		fmt.Println(uri, singer, name)
+	}
 }
 
 func TestGetFansByAPI(t *testing.T) {
