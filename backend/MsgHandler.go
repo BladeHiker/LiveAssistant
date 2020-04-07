@@ -72,7 +72,7 @@ type HandleMsg struct {
 	_ func(string)                 `signal:"sendGreatSailing"`
 	_ func(int)                    `signal:"sendOnlineChanged"`
 	_ func(int)                    `signal:"sendFansChanged"`
-	_ func(string, string, string) `signal:"sendMusicURI"`
+	_ func(string, string, string) `signal:"sendMusicURI"` // uri,singer,name
 
 	_      func(bool, string) `slot:"musicControl"`
 	Button bool               // 点歌模块开关
@@ -142,7 +142,7 @@ func (h *HandleMsg) init() {
 			case g := <-bilibili.P.Online:
 				h.sendOnlineChanged(g)
 			case j := <-bilibili.P.MusicInfo:
-				s := strings.SplitN(j, " ", 1)
+				s := strings.SplitN(j, " ", 2)
 				uri, singer, name, err := GetMusicURI(s[1])
 				if err != nil || uri == "" {
 					continue
@@ -153,8 +153,8 @@ func (h *HandleMsg) init() {
 	}()
 }
 
+// musicControl 代表客户端想要打开/关闭点歌功能
 func (h *HandleMsg) musicControl(b bool, key string) {
-	// 代表打开点歌功能
 	if b == true && key != "" {
 		h.Button = true
 		h.Key = key

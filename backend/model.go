@@ -63,12 +63,9 @@ type WelCome struct {
 }
 
 type LocalInfo struct {
-	MemUsedPercent float64   `json:"mem"`        // 内存使用率
-	CpuUsedPercent float64   `json:"cpu"`        // CPU使用率
-	SendBytes      int64     `json:"send"`       // 单位时间发送字节数
-	DiskUsed       []float64 `json:"disk_used"`  // 磁盘使用率
-	DiskRead       []int64   `json:"disk_read"`  // 磁盘读取字节数
-	DiskWrite      []int64   `json:"disk_write"` // 磁盘写入字节数
+	MemUsedPercent float64 `json:"mem"`  // 内存使用率
+	CpuUsedPercent float64 `json:"cpu"`  // CPU使用率
+	SendBytes      int64   `json:"send"` // 单位时间发送字节数
 }
 
 // ConnectAndServe 重新维持客户端连接
@@ -151,7 +148,7 @@ func GetDanMu(src []byte) *UserDanMu {
 
 	guard := int(gjson.GetBytes(src, "info.2.2").Int())
 	vip := int(gjson.GetBytes(src, "info.2.3").Int())
-	d.Utitle = guard << 1 | vip << 2 | CommonUser
+	d.Utitle = guard<<1 | vip<<2 | CommonUser
 
 	return d
 }
@@ -202,7 +199,7 @@ func GetWelCome(src []byte, typeID uint8) *WelCome {
 }
 
 // 根据歌手名和歌曲获取音乐URI地址
-func GetMusicURI(keywords string) (URI ,singer,name string, err error) {
+func GetMusicURI(keywords string) (URI, singer, name string, err error) {
 	// 根据歌手名，音乐名获取歌曲id
 	q := url.Values{}
 	q.Set("keywords", keywords)
@@ -225,8 +222,8 @@ func GetMusicURI(keywords string) (URI ,singer,name string, err error) {
 	}
 
 	id := int(gjson.GetBytes(rawdata, "result.songs.0.id").Int())
-	name = gjson.GetBytes(rawdata,"result.songs.0.name").String()
-	singer = gjson.GetBytes(rawdata,"result.songs.0.artists.0.name").String()
+	name = gjson.GetBytes(rawdata, "result.songs.0.name").String()
+	singer = gjson.GetBytes(rawdata, "result.songs.0.artists.0.name").String()
 
 	// 根据id获取歌曲uri
 	r := fmt.Sprintf("http://%s/song/url?id=%d", server, id)
