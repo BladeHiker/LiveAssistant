@@ -93,7 +93,8 @@ func (h *HandleMsg) init() {
 					}
 					h.sendDanMu(string(s))
 					if h.Button == true {
-						if strings.HasPrefix(e.Text, h.Key) {
+						sp := strings.Split(e.Text," ")
+						if len(sp) > 1 && sp[0] == h.Key {
 							bilibili.P.MusicInfo <- e.Text
 						}
 					}
