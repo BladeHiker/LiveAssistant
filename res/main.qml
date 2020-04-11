@@ -6,6 +6,7 @@ import ConnectFeedBack 1.0
 import HandleMsg 1.0
 import Qt.labs.platform 1.1
 
+import "theme" as T
 import "fonts/FontAwesome" as FA
 import "components"
 
@@ -23,7 +24,7 @@ ApplicationWindow {
 
     color: "#00000000"
     background: Rectangle {
-        color: "#BB5B6B63"
+        color: T.ColorDesign.mainBG
         radius: 5
         height: mainwindow.height
         width: mainwindow.width
@@ -56,16 +57,16 @@ ApplicationWindow {
     ListModel {
         id: dm
         onCountChanged: {
-            if (count > 100) {
-                remove(0, 50)
+            if (count > 60) {
+                remove(0, 20)
             }
         }
     }
     ListModel {
         id: gf
         onCountChanged: {
-            if (count > 60) {
-                remove(0, 30)
+            if (count > 30) {
+                remove(0, 10)
             }
         }
     }
@@ -85,6 +86,29 @@ ApplicationWindow {
             } else if (e === -1) {
                 startState("inp")
                 //                roomidArea.state = "inp"
+            }
+        }
+        onSendConnInfo: function (b) {
+            if (b === false) {
+                linked = 0
+                //                dm.append({
+                //                              "type": 0,
+                //                              "avatar": "",
+                //                              "utitle": "",
+                //                              "title": "",
+                //                              "uname": "",
+                //                              "msg": "网络通信断开，正在尝试重连"
+                //                          })
+            } else if (b === true) {
+                linked = 1
+                //                dm.append({
+                //                              "type": 0,
+                //                              "avatar": "",
+                //                              "utitle": "",
+                //                              "title": "",
+                //                              "uname": "",
+                //                              "msg": "网络通信正常"
+                //                          })
             }
         }
     }
@@ -118,11 +142,11 @@ ApplicationWindow {
                 font.bold: true
                 font.pixelSize: 10
                 visible: false
-                anchors.centerIn: parent.Center
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
+                color: T.ColorDesign.closeBtnText
             }
-            color: "#fc625d"
+            color: T.ColorDesign.closeBtnBG
             MouseArea {
                 anchors.fill: parent
                 hoverEnabled: true
@@ -152,6 +176,8 @@ ApplicationWindow {
         }
         anchors.top: parent.top
         anchors.right: parent.right
+        anchors.topMargin: 2
+        anchors.rightMargin: 2
         width: 15
         height: 15
         z: 100
@@ -170,12 +196,12 @@ ApplicationWindow {
                 //                font.bold: true
                 font.pixelSize: 8
                 //                visible: false
-                anchors.centerIn: parent.Center
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
                 rotation: 0
+                color: T.ColorDesign.topBtnText
             }
-            color: "#fdbc40"
+            color: T.ColorDesign.topBtnBG
             MouseArea {
                 anchors.fill: parent
                 hoverEnabled: true
@@ -196,7 +222,8 @@ ApplicationWindow {
         }
         anchors.top: parent.top
         anchors.right: parent.right
-        anchors.rightMargin: 20
+        anchors.rightMargin: 22
+        anchors.topMargin: 2
         width: 15
         height: 15
         z: 100
@@ -213,7 +240,6 @@ ApplicationWindow {
                 width: parent.width
                 height: 100
                 anchors.top: parent.top
-                color: "#32c7ff"
                 clip: true
                 Image {
                     id: panel
@@ -226,7 +252,7 @@ ApplicationWindow {
                     text: "V1.0 Alpha"
                     verticalAlignment: Text.AlignVCenter
                     font.family: "Arial"
-                    color: "#aaaaaa"
+                    color: T.ColorDesign.startVerText
                     font.bold: false
                     horizontalAlignment: Text.AlignHCenter
                     font.pointSize: 8
@@ -265,7 +291,7 @@ ApplicationWindow {
                 anchors.top: logoarea.bottom
                 height: 200
                 width: parent.width
-                color: "#eee"
+                color: T.ColorDesign.startBG
                 Connections {
                     target: connectFeedBack
                     onStartState: function (s) {
@@ -368,13 +394,13 @@ ApplicationWindow {
                     anchors.horizontalCenter: parent.horizontalCenter
                     color: {
                         if (text != "" && /^\d+$/.test(text) == false) {
-                            return "#ff0000"
+                            return T.ColorDesign.roomIdInpTextErr
                         }
-                        return "#000000"
+                        return T.ColorDesign.roomIdInpText
                     }
                     background: Rectangle {
                         radius: 25
-                        border.color: roomidInp.enabled ? "#7a5fee" : "transparent"
+                        border.color: roomidInp.enabled ? T.ColorDesign.roomIdInpBorder : "transparent"
                     }
                     Behavior on anchors.topMargin {
                         NumberAnimation {
@@ -427,7 +453,7 @@ ApplicationWindow {
                     Text {
                         id: connBtnText
                         anchors.centerIn: parent
-                        color: "#ffffff"
+                        color: T.ColorDesign.roomIdBtnText
                         text: "连接直播间"
                         font.family: "黑体"
                         font.pointSize: 12
@@ -456,11 +482,11 @@ ApplicationWindow {
                             gradient: Gradient {
                                 GradientStop {
                                     position: 0.0
-                                    color: "#4d32e1"
+                                    color: T.ColorDesign.roomIdBtnGrad0
                                 }
                                 GradientStop {
                                     position: 1.0
-                                    color: "#6914ca"
+                                    color: T.ColorDesign.roomIdBtnGrad1
                                 }
                             }
                         }
@@ -470,7 +496,7 @@ ApplicationWindow {
                             maskSource: parent
                         }
 
-                        border.color: roomidInp.enabled ? "#7a5fee" : "transparent"
+                        border.color: roomidInp.enabled ? T.ColorDesign.roomIdBtnBorder : "transparent"
                     }
 
                     onClicked: {
@@ -602,7 +628,7 @@ ApplicationWindow {
                     visible: musicbox.musicenable
                     width: parent.width
                     height: 1
-                    color: "#aaeeeeee"
+                    color: T.ColorDesign.splitLine
                 }
                 Item {
                     id: infobox
@@ -613,8 +639,9 @@ ApplicationWindow {
                         anchors.fill: parent
                         spacing: 10
                         Text {
-                            color: "#FFFFFF"
-                            text: '<font color="#FF93D3">' + FA.Icons.faCube
+                            color: T.ColorDesign.infoRoomIdText
+                            text: '<font color="' + T.ColorDesign.infoRoomIdIcon
+                                  + '">' + ((linked == 0) ? FA.Icons.faUnlink : FA.Icons.faLink)
                                   + '</font>' + ' ' + roomID
                             anchors.verticalCenter: parent.verticalCenter
                             font.family: FA.Fonts.solid
@@ -622,18 +649,18 @@ ApplicationWindow {
                             font.pixelSize: 11
                         }
                         Text {
-                            color: "#FFFFFF"
-                            text: '<font color="#23ade5">' + FA.Icons.faUsers
-                                  + '</font>' + ' ' + online
+                            color: T.ColorDesign.infoOnlineText
+                            text: '<font color="' + T.ColorDesign.infoOnlineIcon
+                                  + '">' + FA.Icons.faUsers + '</font>' + ' ' + online
                             anchors.verticalCenter: parent.verticalCenter
                             font.family: FA.Fonts.solid
                             verticalAlignment: Text.AlignVCenter
                             font.pixelSize: 11
                         }
                         Text {
-                            color: "#FFFFFF"
-                            text: '<font color="#fb7299">' + FA.Icons.faHeart
-                                  + '</font>' + ' ' + fans
+                            color: T.ColorDesign.infoFansText
+                            text: '<font color="' + T.ColorDesign.infoFansIcon
+                                  + '">' + FA.Icons.faHeart + '</font>' + ' ' + fans
                             anchors.verticalCenter: parent.verticalCenter
                             font.family: FA.Fonts.solid
                             verticalAlignment: Text.AlignVCenter
@@ -663,7 +690,7 @@ ApplicationWindow {
                     id: line1
                     width: parent.width
                     height: 1
-                    color: "#aaeeeeee"
+                    color: T.ColorDesign.splitLine
                 }
                 ScrollView {
                     id: dmview
@@ -739,7 +766,7 @@ ApplicationWindow {
                     id: line2
                     width: parent.width
                     height: 1
-                    color: "#aaeeeeee"
+                    color: T.ColorDesign.splitLine
                 }
                 ScrollView {
                     id: giftview
@@ -796,7 +823,7 @@ ApplicationWindow {
                         text: musicbox.visible ? FA.Icons.faChevronUp : FA.Icons.faMusic
                         font.family: FA.Fonts.solid
                         //                        color: "#0772A1"
-                        color: "#000000"
+                        color: T.ColorDesign.musicBtnText
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.verticalCenter: parent.verticalCenter
                         font.bold: true
@@ -806,7 +833,7 @@ ApplicationWindow {
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignHCenter
                     }
-                    color: "#35cd4b"
+                    color: T.ColorDesign.musicBtnBG
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
@@ -840,7 +867,8 @@ ApplicationWindow {
                 }
                 anchors.top: parent.top
                 anchors.right: parent.right
-                anchors.rightMargin: 40
+                anchors.rightMargin: 42
+                anchors.topMargin: 2
                 width: 15
                 height: 15
                 z: 100
