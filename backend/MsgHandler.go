@@ -53,7 +53,7 @@ func (m *ConnectFeedBack) receiveRoomID(roomid int) {
 	// 发送连接是否正常的标志
 	go func() {
 		for {
-			if bilibili.UserClient != nil {
+			if bilibili.UserClient.IsConnected == true {
 				m.sendConnInfo(true)
 			} else {
 				m.sendConnInfo(false)
