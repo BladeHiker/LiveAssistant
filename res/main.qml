@@ -91,29 +91,8 @@ ApplicationWindow {
         onSendConnInfo: function (b) {
             if (b === false) {
                 linked = 0
-<<<<<<< Updated upstream
-                //                dm.append({
-                //                              "type": 0,
-                //                              "avatar": "",
-                //                              "utitle": "",
-                //                              "title": "",
-                //                              "uname": "",
-                //                              "msg": "网络通信断开，正在尝试重连"
-                //                          })
             } else if (b === true) {
                 linked = 1
-                //                dm.append({
-                //                              "type": 0,
-                //                              "avatar": "",
-                //                              "utitle": "",
-                //                              "title": "",
-                //                              "uname": "",
-                //                              "msg": "网络通信正常"
-                //                          })
-=======
-            } else if (b === true) {
-                linked = 1
->>>>>>> Stashed changes
             }
         }
     }
