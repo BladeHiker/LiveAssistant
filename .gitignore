@@ -16,4 +16,19 @@
 
 # Dependency directories (remove the comment below to include it)
 vendor/
-*qamel*
+iconengines
+imageformats
+platforms
+Qt
+QtGraphicalEffects
+Qt5Core.dll
+Qt5Gui.dll
+QtQml
+QtMultimedia
+QtQuick
+QtQuick.2
+
+
+# The generated code file
+moc*.*
+qamel*.*

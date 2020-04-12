@@ -56,8 +56,8 @@ func (m *ConnectFeedBack) receiveRoomID(roomid int) {
 			if bilibili.UserClient.IsConnected == true {
 				m.sendConnInfo(true)
 			} else {
-				ConnectAndServe(roomid)
 				m.sendConnInfo(false)
+				ConnectAndServe(roomid)
 				continue
 			}
 			time.Sleep(time.Second * 3)

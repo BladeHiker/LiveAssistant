@@ -12,10 +12,10 @@ import (
 
 // 客户端实例
 type Client struct {
-	RoomID        int32           // 房间 ID
-	Online        int32           // 用来判断人气是否变动
-	Conn          *websocket.Conn // 连接后的对象
-	IsConnected   bool            // 客户端是否连接
+	RoomID      int32           // 房间 ID
+	Online      int32           // 用来判断人气是否变动
+	Conn        *websocket.Conn // 连接后的对象
+	IsConnected bool            // 客户端是否连接
 }
 
 // HandShakeMsg 定义了握手包的信息格式
@@ -61,10 +61,10 @@ var (
 
 func NewClient() *Client {
 	return &Client{
-		RoomID:        0,
-		Online:        0,
-		Conn:          nil,
-		IsConnected:   false,
+		RoomID:      0,
+		Online:      0,
+		Conn:        nil,
+		IsConnected: false,
 	}
 }
 
@@ -93,10 +93,12 @@ func CreateClient(roomid int32) (c *Client, err error) {
 func (c *Client) Start(key string) (err error) {
 	m := NewHandShakeMsg(c.RoomID)
 	m.Key = key
+
 	b, err := json.Marshal(m)
 	if err != nil {
-		return err
+		return
 	}
+
 	// 发送握手包
 	err = c.SendPackage(0, 16, 1, 7, 1, b)
 	if err != nil {
@@ -105,6 +107,7 @@ func (c *Client) Start(key string) (err error) {
 
 	go c.ReceiveMsg()
 	go c.HeartBeat()
+
 	return
 }
 
@@ -141,62 +144,60 @@ func (c *Client) SendPackage(packetlen uint32, magic uint16, ver uint16, typeID 
 
 func (c *Client) ReceiveMsg() {
 	for {
-		if c.IsConnected {
-			_, msg, err := c.Conn.ReadMessage()
-			if err != nil {
-				c.IsConnected = false
-				continue
+		_, msg, err := c.Conn.ReadMessage()
+		if err != nil || msg == nil {
+			c.IsConnected = false
+			break
+		}
+
+		// 根据消息类型进行分类处理
+		switch msg[11] {
+		// 服务器发来的心跳包下行，实体部分仅直播间人气值
+		case 3:
+			h := ByteArrToDecimal(msg[16:])
+			if int32(h) != c.Online {
+				c.Online = int32(h)
+				P.Online <- h
 			}
 
-			// 根据消息类型进行分类处理
-			switch msg[11] {
-			// 服务器发来的心跳包下行，实体部分仅直播间人气值
-			case 3:
-				h := ByteArrToDecimal(msg[16:])
-				if int32(h) != c.Online {
-					c.Online = int32(h)
-					P.Online <- h
-				}
-
-			case 5:
-				inflated, err := ZlibInflate(msg[16:])
-				if err == nil {
-					// 代表数据需要压缩，如DANMU_MSG，SEND_GIFT等信息量较大的数据包
-					for len(inflated) > 0 {
-						l := ByteArrToDecimal(inflated[:4])
-						c := gjson.GetBytes(inflated[16:l], "cmd").String()
-						switch CMD(c) {
-						case CMDDanmuMsg:
-							P.DanMu <- inflated[16:l]
-						case CMDSendGift:
-							P.Gift <- inflated[16:l]
-						case CMDWELCOME:
-							P.WelCome <- inflated[16:l]
-						case CMDWelcomeGuard:
-							P.WelComeGuard <- inflated[16:l]
-						case CMDEntry:
-							P.GreatSailing <- inflated[16:l]
-						case CMDRoomRealTimeMessageUpdate:
-							P.Fans <- inflated[16:l]
-						}
-						inflated = inflated[l:]
+		case 5:
+			inflated, err := ZlibInflate(msg[16:])
+			if err == nil {
+				// 代表数据需要压缩，如DANMU_MSG，SEND_GIFT等信息量较大的数据包
+				for len(inflated) > 0 {
+					l := ByteArrToDecimal(inflated[:4])
+					c := gjson.GetBytes(inflated[16:l], "cmd").String()
+					switch CMD(c) {
+					case CMDDanmuMsg:
+						P.DanMu <- inflated[16:l]
+					case CMDSendGift:
+						P.Gift <- inflated[16:l]
+					case CMDWELCOME:
+						P.WelCome <- inflated[16:l]
+					case CMDWelcomeGuard:
+						P.WelComeGuard <- inflated[16:l]
+					case CMDEntry:
+						P.GreatSailing <- inflated[16:l]
+					case CMDRoomRealTimeMessageUpdate:
+						P.Fans <- inflated[16:l]
 					}
+					inflated = inflated[l:]
 				}
 			}
 		}
+
 	}
 }
 
 func (c *Client) HeartBeat() {
 	for {
-		if c.IsConnected {
-			// 每半分钟发送一次内容是 两个空对象 的数据包作为心跳包，维持连接
-			obj := []byte("5b6f626a656374204f626a6563745d")
-			if err := c.SendPackage(0, 16, 1, 2, 1, obj); err != nil {
-				c.IsConnected = false
-				continue
-			}
-			time.Sleep(30 * time.Second)
+		// 根据协议，每半分钟发送一次内容是 两个空对象 的数据包作为心跳包，维持连接
+		obj := []byte("5b6f626a656374204f626a6563745d")
+		if err := c.SendPackage(0, 16, 1, 2, 1, obj); err != nil {
+			c.IsConnected = false
+			break
 		}
+		time.Sleep(30 * time.Second)
+
 	}
 }
