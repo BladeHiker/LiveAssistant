@@ -65,7 +65,6 @@ func NewClient() *Client {
 		Online:        0,
 		Conn:          nil,
 		IsConnected:   false,
-		NeedReConnect: make(chan bool),
 	}
 }
 
