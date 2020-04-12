@@ -84,6 +84,7 @@ func ConnectAndServe(roomid int) {
 	// 启动客户端
 	err = bilibili.UserClient.Start(key)
 	if err != nil {
+		bilibili.UserClient.IsConnected = false
 		return
 	}
 	return

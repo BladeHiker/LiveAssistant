@@ -16,7 +16,6 @@ type Client struct {
 	Online        int32           // 用来判断人气是否变动
 	Conn          *websocket.Conn // 连接后的对象
 	IsConnected   bool            // 客户端是否连接
-	NeedReConnect chan bool       // 通知客户端已经断开连接
 }
 
 // HandShakeMsg 定义了握手包的信息格式
@@ -102,8 +101,7 @@ func (c *Client) Start(key string) (err error) {
 	// 发送握手包
 	err = c.SendPackage(0, 16, 1, 7, 1, b)
 	if err != nil {
-		c.IsConnected = false
-		c.NeedReConnect <- true
+		return
 	}
 
 	go c.ReceiveMsg()
@@ -148,7 +146,6 @@ func (c *Client) ReceiveMsg() {
 			_, msg, err := c.Conn.ReadMessage()
 			if err != nil {
 				c.IsConnected = false
-				c.NeedReConnect <- true
 				continue
 			}
 

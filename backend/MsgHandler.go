@@ -56,21 +56,11 @@ func (m *ConnectFeedBack) receiveRoomID(roomid int) {
 			if bilibili.UserClient.IsConnected == true {
 				m.sendConnInfo(true)
 			} else {
+				ConnectAndServe(roomid)
 				m.sendConnInfo(false)
+				continue
 			}
 			time.Sleep(time.Second * 3)
-		}
-	}()
-
-	// 如果有断开连接的通知，则重新建立客户端连接
-	go func() {
-		for {
-			select {
-			case <-bilibili.UserClient.NeedReConnect:
-				bilibili.P = bilibili.NewPool()
-				bilibili.UserClient = bilibili.NewClient()
-				ConnectAndServe(roomid)
-			}
 		}
 	}()
 }
