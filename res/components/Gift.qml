@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.5
 import QtGraphicalEffects 1.0
+import "../theme" as T
 
 ItemDelegate {
     id: giftdel
@@ -15,15 +16,16 @@ ItemDelegate {
 
         Text {
             id: txt
-            text: '<font color="#FFE87A">' + uname + "</font>" + gift_action
-                  + '<font color="#64E8FF">' + gift_name + "×" + nums + "</font>"
+            text: '<font color="' + T.ColorDesign.giftUname + '">' + uname + "</font>"
+                  + gift_action + '<font color="' + T.ColorDesign.giftGname
+                  + '">' + gift_name + "×" + nums + "</font>"
             textFormat: Text.RichText
             font.family: "黑体"
             font.bold: true
             verticalAlignment: Text.AlignVCenter
             font.pixelSize: 12
             anchors.left: gift.left
-            color:"#ffffff"
+            color: "#ffffff"
         }
         //        Text {
         //            id: priceEq
