@@ -4,6 +4,7 @@ import QtMultimedia 5.12
 import QtGraphicalEffects 1.0
 import QtQuick.Controls.Styles 1.4
 import "../fonts/FontAwesome" as FA
+import "../theme" as T
 
 Item {
     id: element
@@ -100,7 +101,7 @@ Item {
         background: Rectangle {
             width: parent.width
             height: parent.height
-            color: "#77005077"
+            color: T.ColorDesign.musicSettingBG
         }
         closePolicy: Popup.NoAutoClose
         Keys.enabled: true
@@ -122,7 +123,7 @@ Item {
             font.pixelSize: 12
             horizontalAlignment: Text.AlignHCenter
             width: parent.width
-            color: "white"
+            color: T.ColorDesign.musicSettingTitle
             height: 10
         }
         TextField {
@@ -174,7 +175,7 @@ Item {
         background: Rectangle {
             width: parent.width
             height: parent.height
-            color: "#cc005077"
+            color: T.ColorDesign.musicListBG
         }
         margins: 20
         Text {
@@ -185,7 +186,7 @@ Item {
             horizontalAlignment: Text.AlignHCenter
             font.pixelSize: 15
             anchors.top: musicListPop.Top
-            color: "white"
+            color: T.ColorDesign.musicListTitle
         }
         ScrollView {
             width: parent.width
@@ -212,7 +213,7 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: 15
                         wrapMode: Text.Wrap
-                        color: "white"
+                        color: T.ColorDesign.musicListText
                     }
                 }
             }
@@ -227,7 +228,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         font.pixelSize: 10
         font.family: "微软雅黑 Light"
-        color: "#FFFFFF"
+        color: T.ColorDesign.musicSinger
         //        layer.enabled: true
         //        layer.effect: Glow {
         //            color: "white"
@@ -248,7 +249,7 @@ Item {
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
         font.pixelSize: 22
-        color: "#FFFFFF"
+        color: T.ColorDesign.musicNowPlaying
         //        layer.enabled: true
         //        layer.effect: Glow {
         //            color: "white"
@@ -267,14 +268,14 @@ Item {
             implicitWidth: 300
             anchors.verticalCenter: playProgress.verticalCenter
             anchors.left: playProgress.left
-            color: "#e6e6e6"
+            color: T.ColorDesign.musicProgressBarBG
         }
         contentItem: Rectangle {
             anchors.left: control.left
             anchors.verticalCenter: playProgress.verticalCenter
             width: playProgress.visualPosition * playProgress.width
             height: playProgress.height
-            color: "#0078d7"
+            color: T.ColorDesign.musicProgressBarContent
             z: 2
         }
         anchors.bottom: infoRow.top
@@ -296,7 +297,7 @@ Item {
         spacing: 5
         Text {
             id: tips0
-            color: "#57EB5C"
+            color: T.ColorDesign.musicTips0
             font.family: "微软雅黑"
             verticalAlignment: Text.AlignVCenter
             visible: key !== "" && musicSeek
@@ -306,15 +307,15 @@ Item {
 
         Text {
             id: info1
-            color: "#57EB5C"
+            color: T.ColorDesign.musicInfo1
             text: qsTr("当前列表：" + playlist.itemCount + "首")
             font.pixelSize: 12
             verticalAlignment: Text.AlignVCenter
             font.family: "微软雅黑"
             ColorAnimation on color {
                 id: textAni1
-                from: "red"
-                to: "#57EB5C"
+                from: T.ColorDesign.musicInfo1Change
+                to: T.ColorDesign.musicInfo1
                 duration: 500
             }
         }
@@ -339,12 +340,12 @@ Item {
             case Audio.NetworkError:
             case Audio.AccessDenied:
                 flickerAni.start()
-                playSym.color = "#c62f2f"
+                playSym.color = T.ColorDesign.musicPlaySym
                 symRotation.stop()
                 playSym.rotation = 0
                 return FA.Icons.faExclamationCircle
             case Audio.ServiceMissing:
-                playSym.color = "#ffe300"
+                playSym.color = T.ColorDesign.musicPlaySymWarn
                 symRotation.stop()
                 playSym.rotation = 0
                 return FA.Icons.faExclamationTriangle
@@ -354,38 +355,38 @@ Item {
             case Audio.Buffering:
             case Audio.Loading:
                 symRotation.start()
-                playSym.color = "#23ade5"
+                playSym.color = T.ColorDesign.musicPlaySymLoading
                 return FA.Icons.faCircleNotch
             case Audio.InvalidMedia:
                 flickerAni.start()
                 symRotation.stop()
                 playSym.rotation = 0
-                playSym.color = "#c62f2f"
+                playSym.color = T.ColorDesign.musicPlaySymErr
                 return FA.Icons.faExclamationCircle
             }
 
             switch (player.playbackState) {
             case Audio.PlayingState:
                 symRotation.stop()
-                playSym.color = "#23ade5"
+                playSym.color = T.ColorDesign.musicPlaySym
                 flickerAni.stop()
                 playSym.rotation = 0
                 return FA.Icons.faPlayCircle
             case Audio.PausedState:
                 symRotation.stop()
-                playSym.color = "#23ade5"
+                playSym.color = T.ColorDesign.musicPlaySym
                 flickerAni.stop()
                 playSym.rotation = 0
                 return FA.Icons.faPauseCircle
             case Audio.StoppedState:
                 symRotation.stop()
-                playSym.color = "#23ade5"
+                playSym.color = T.ColorDesign.musicPlaySym
                 flickerAni.stop()
                 playSym.rotation = 0
                 return FA.Icons.faStopCircle
             }
         }
-        color: "#23ade5"
+        color: T.ColorDesign.musicPlaySym
         anchors.verticalCenter: infoRow.verticalCenter
         PropertyAnimation {
             id: flickerAni
@@ -525,8 +526,8 @@ Item {
                 implicitWidth: 3
                 implicitHeight: 10
                 radius: 0
-                color: volSlider.pressed ? "#f0f0f0" : "#f6f6f6"
-                border.color: "#bdbebf"
+                color: volSlider.pressed ? T.ColorDesign.musicVolHandleBGPressed : T.ColorDesign.musicVolHandleBG
+                border.color: T.ColorDesign.musicVolHandleBorder
             }
         }
     }

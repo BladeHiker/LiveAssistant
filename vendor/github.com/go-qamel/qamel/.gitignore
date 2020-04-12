@@ -1,7 +1,0 @@
-# Exclude config file
-.vscode/
-.idea/
-
-# Exclude generated file
-/qamel
-/moc-*.h
