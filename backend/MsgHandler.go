@@ -6,6 +6,7 @@ import (
 	"github.com/go-qamel/qamel"
 	"github.com/tidwall/gjson"
 	"strings"
+	"time"
 )
 
 func init() {
@@ -18,10 +19,10 @@ type ConnectFeedBack struct {
 	qamel.QmlObject
 
 	// _ func()       `constructor:"init"`
-	_ func(int)    `slot:"receiveRoomID"`
-	_ func(int)    `signal:"sendFansNums"`
-	_ func(string) `signal:"sendCompInfo"`
-	_ func(int)    `signal:"sendErr"`
+	_ func(int)  `slot:"receiveRoomID"`
+	_ func(int)  `signal:"sendFansNums"`
+	_ func(bool) `signal:"sendConnInfo"`
+	_ func(int)  `signal:"sendErr"`
 }
 
 //func (m *ConnectFeedBack) init() {
@@ -49,11 +50,25 @@ func (m *ConnectFeedBack) receiveRoomID(roomid int) {
 	}
 	m.sendFansNums(GetFansByAPI(roomid))
 
+	// 发送连接是否正常的标志
+	go func() {
+		for {
+			if bilibili.UserClient != nil {
+				m.sendConnInfo(true)
+			} else {
+				m.sendConnInfo(false)
+			}
+			time.Sleep(time.Second * 3)
+		}
+	}()
+
 	// 如果有断开连接的通知，则重新建立客户端连接
 	go func() {
 		for {
 			select {
 			case <-bilibili.UserClient.NeedReConnect:
+				bilibili.P = bilibili.NewPool()
+				bilibili.UserClient = bilibili.NewClient()
 				ConnectAndServe(roomid)
 			}
 		}
@@ -93,7 +108,8 @@ func (h *HandleMsg) init() {
 					}
 					h.sendDanMu(string(s))
 					if h.Button == true {
-						if strings.HasPrefix(e.Text, h.Key) {
+						sp := strings.Split(e.Text, " ")
+						if len(sp) > 1 && sp[0] == h.Key {
 							bilibili.P.MusicInfo <- e.Text
 						}
 					}
